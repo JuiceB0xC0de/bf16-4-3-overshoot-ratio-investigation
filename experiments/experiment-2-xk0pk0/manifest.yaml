@@ -1,0 +1,9 @@
+experiment: 2
+eid: "exp_01m1rc45nwevdtjx8af5xk0pk0"
+title: "Arm B: is 4/3 an AdamW number, or does any optimizer get it?"
+date: "2026-09-05"
+status: in-progress
+data: {}
+outputs: {}
+results: {}
+slurm_jobs: []
