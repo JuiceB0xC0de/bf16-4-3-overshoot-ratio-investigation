@@ -85,12 +85,67 @@ def main() -> None:
           "rows[adamw_native].clip_fired_first_100",
           rows["adamw_native"]["clip_fired_first_100"])
     claim("shadow_self_check",
-          "The shadow's reconstruction of the host optimizer reproduces the "
-          "host's own measured overshoot on all 300 steps, worst gap 0.002811.",
+          "On the AdamW host, the shadow's AdamW reconstruction reproduces the "
+          "host's own measured overshoot on all 300 steps, worst gap 0.002811. "
+          "The stored check always compares the shadow's AdamW rule against the "
+          "host, so it is meaningful only on this row and is recorded as failing "
+          "on the other eight, where it compares mismatched rules.",
           f"{RES}/by_condition.json",
           "rows[adamw_native].shadow_self_check",
           {k: sig(v, 4) if isinstance(v, float) else v
            for k, v in rows["adamw_native"]["shadow_self_check"].items()})
+
+    def _shadow_at_one(run, rule):
+        """The shadow curve for ``rule`` on ``run``'s trajectory at multiplier 1."""
+        entries = curve["sources"][run]["curve"][rule]
+        return next(c for c in entries if abs(c["multiplier"] - 1.0) < 1e-12)
+
+    per_host = {}
+    for run in sorted(rows):
+        r = rows[run]
+        entry = _shadow_at_one(run, r["condition"])
+        measured = r["muon_covered_overshoot"]["point"]
+        per_host[run] = {
+            "host_rule": r["condition"],
+            "measured": ovr(measured),
+            "shadow_same_rule_at_multiplier_1": ovr(entry["overshoot"]["point"]),
+            "gap": sig(entry["overshoot"]["point"] - measured, 4),
+            "intent_norm_ratio": sig(
+                entry["intent_norm_median"]
+                / r["muon_covered_intent_norm"]["point"], 6),
+            "decay_x_max": sig(r["geom_muon_covered_decay_x_max"]["point"], 4),
+        }
+    claim("shadow_reconstruction_per_host",
+          "Running each host's own rule through the shadow at multiplier 1 "
+          "matches that host's intended-update norm to six figures, so the only "
+          "remaining difference is the decoupled weight decay the shadow omits. "
+          "The reconstruction lands within 0.003978 on the AdamW host and the "
+          "five Muon hosts, and 0.05431 to 0.1186 low on the three SGD hosts, "
+          "whose decay write is 0.0255 to 0.1487 lattice spacings rather than "
+          "AdamW's 0.00051.",
+          f"{RES}/shadow_curve.json and {RES}/by_condition.json",
+          "sources[*].curve[host_rule] at multiplier 1 vs "
+          "rows[*].muon_covered_overshoot",
+          per_host)
+
+    real_sgd = rows["sgd_scale_matched_v2"]["muon_covered_overshoot"]["point"]
+    real_adamw = rows["adamw_native"]["muon_covered_overshoot"]["point"]
+    claim("sgd_deficit_with_decay",
+          "The shadow's SGD rule omits weight decay, so its 0.2452 deficit is "
+          "the decay-free rule's. The real SGD run carrying its decoupled decay "
+          "at 0.9983 of AdamW's update norm sits 0.1544 below AdamW. Both put "
+          "SGD well below, on different trajectories in the second case.",
+          f"{RES}/by_condition.json",
+          "rows[sgd_scale_matched_v2].muon_covered_overshoot minus "
+          "rows[adamw_native].muon_covered_overshoot",
+          {"sgd_overshoot": ovr(real_sgd),
+           "adamw_overshoot": ovr(real_adamw),
+           "difference": sig(real_sgd - real_adamw, 4),
+           "shadow_decay_free_difference": ovr(
+               paired["sgd_minus_adamw"]["point"]),
+           "sgd_intent_norm_ratio_vs_adamw": sig(
+               rows["sgd_scale_matched_v2"]["muon_covered_intent_norm"]["point"]
+               / rows["adamw_native"]["muon_covered_intent_norm"]["point"], 4)})
 
     for name in ("adamw", "muon", "sgd"):
         claim(f"shadow_at_matched_{name}",
@@ -111,16 +166,32 @@ def main() -> None:
                "hi": ovr(paired[k]["hi"]),
                "n_steps_negative": paired[k]["n_steps_negative"],
                "n_steps": paired[k]["n_steps"]})
-        claim(f"shadow_across_{name}",
-              f"The {name} minus AdamW difference replicated on every host "
-              f"trajectory measured.",
+        biggest = max(abs(across[k]["min_point"]), abs(across[k]["max_point"]))
+        text = {
+            "muon": ("Across all nine host trajectories the Muon minus AdamW "
+                     "difference stays within 0.01394 in absolute value. Eight "
+                     "are negative and one, on the diverged Muon-at-0.02 host, "
+                     "is +0.003136, so what replicates is the small size of the "
+                     "difference rather than its sign."),
+            "sgd": ("The SGD minus AdamW difference is negative on all nine host "
+                    "trajectories. Its size tracks model state: 0.2115 to 0.2481 "
+                    "below on the seven hosts whose loss fell, and 0.1444 and "
+                    "0.06653 below on the two diverged Muon hosts."),
+        }[name]
+        per_traj = across[k]["per_trajectory"]
+        claim(f"shadow_across_{name}", text,
               f"{RES}/shadow_curve.json", f"across_trajectories.{k}",
               {"min_point": ovr(across[k]["min_point"]),
                "max_point": ovr(across[k]["max_point"]),
+               "max_abs_point": ovr(biggest),
                "n_trajectories": across[k]["n_trajectories"],
                "n_negative": across[k]["n_trajectories_negative"],
                "n_intervals_excluding_zero":
-                   across[k]["n_trajectories_interval_excludes_zero"]})
+                   across[k]["n_trajectories_interval_excludes_zero"],
+               "per_trajectory": {
+                   host: {"point": ovr(v["point"]),
+                          "trains": rows[host]["trajectory"]["verdict"]}
+                   for host, v in sorted(per_traj.items())}})
 
     claim("matched_delivery",
           "At a matched fraction of coordinates delivered, SGD stays about a "
@@ -143,6 +214,30 @@ def main() -> None:
            "large_overshoot": ovr(big["overshoot"]["point"]),
            "large_zero_fraction": sig(big["zero_fraction"]["point"]),
            "four_thirds": ovr(FOUR_THIRDS)})
+
+    sweep = {name: {f"{c['multiplier']:g}": ovr(c["overshoot"]["point"])
+                    for c in prim["curve"][name]}
+             for name in ("adamw", "muon", "sgd")}
+    claim("four_thirds_needs_a_broad_distribution",
+          "4/3 is the small-update limit for a broadly spread x distribution, "
+          "not for every rule. AdamW and Muon flatten at 1.3323 and 1.3331 at "
+          "1/32 of AdamW's magnitude, while decay-free SGD tops out at 1.2368 "
+          "and never approaches 4/3 anywhere in the 256-fold sweep.",
+          f"{RES}/shadow_curve.json",
+          f"sources.{curve['primary']}.curve",
+          {"four_thirds": ovr(FOUR_THIRDS), "overshoot_by_multiplier": sweep})
+
+    spread = {run: {"x_p05": sig(h["x_quantiles_from_hist"]["0.05"]),
+                    "x_p95": sig(h["x_quantiles_from_hist"]["0.95"]),
+                    "p95_over_p05": sig(h["x_quantiles_from_hist"]["0.95"]
+                                        / h["x_quantiles_from_hist"]["0.05"], 4)}
+              for run, h in sorted(hist.items())}
+    claim("x_spread_by_rule",
+          "AdamW and Muon spread their intended updates over roughly two "
+          "decades of lattice spacing, a 179 to 222 fold ratio between the 5th "
+          "and 95th percentile of x, while SGD's spread is 2.6 to 3.1 fold.",
+          f"{RES}/step_histograms.json", "[*].x_quantiles_from_hist",
+          spread)
 
     for run in sorted(rows):
         r = rows[run]
@@ -224,10 +319,14 @@ def main() -> None:
                      - r["geom_muon_covered_ratio_predicted_from_x"]["point"], 3)
             for run, r in sorted(rows.items())}
     claim("predicted_from_x",
-          "Predicting each run's overshoot from its measured distribution of "
-          "x = |intended update| / lattice spacing alone, under "
-          "round-to-nearest, reproduces the measured value; nothing "
-          "optimizer-specific is left over.",
+          "Under a round-to-nearest model of the bfloat16 write, each run's "
+          "measured distribution of x = |intended update| / lattice spacing "
+          "reproduces its overshoot to a median 0.00132 and a worst 0.0173. "
+          "Given that write model, x mediates the optimizer's effect "
+          "completely, with no residual rule-identity term; the check is of the "
+          "write model and its residuals, not independent cross-optimizer "
+          "evidence. The two largest residuals are the two runs with the "
+          "largest decay write.",
           f"{RES}/by_condition.json",
           "rows[*].muon_covered_overshoot minus "
           "rows[*].geom_muon_covered_ratio_predicted_from_x",
@@ -278,12 +377,14 @@ def main() -> None:
             f"{abs(sig(paired['muon_minus_adamw']['point'])):.4f} at exactly matched "
             "update magnitude, so the number is not an AdamW pathology; SGD with "
             f"momentum sits {abs(sig(paired['sgd_minus_adamw']['point'])):.4f} below "
-            "it under identical gradients and identical parameters, so it is not "
-            "a property of the bfloat16 writer alone either. What the statistic "
-            "reads out is where the update sits relative to the local lattice "
-            "spacing: predicting it from that distribution alone, under "
-            "round-to-nearest, reproduces every run, and 4/3 is what that "
-            "prediction returns in the small-update limit rather than a "
+            "it under identical gradients and identical parameters in the shadow "
+            "control's decay-free rule, and 0.1544 below in the real run that "
+            "carries decoupled decay, so it is not a property of the bfloat16 "
+            "writer alone either. What the statistic reads out is where the "
+            "update sits relative to the local lattice spacing: under a "
+            "round-to-nearest model of the write, that distribution alone "
+            "reproduces every run, and 4/3 is what the model returns for a "
+            "broadly spread distribution of small updates rather than a "
             "constant of the writer."),
         "assessment": "signal",
         "decision_rule": (
@@ -310,9 +411,12 @@ def main() -> None:
             "are fed the identical post-clip gradients and their intents are "
             "written into the identical bfloat16 parameters at nine magnitudes "
             "from 1/32 to 8 times the host's own median. It matches magnitude "
-            "exactly and shares the trajectory, and is self-validating because "
-            "its reconstruction of the host optimizer must reproduce the host's "
-            "measured overshoot.",
+            "exactly and shares the trajectory. The shadow omits the decoupled "
+            "weight-decay write, so running a host's own rule through it at "
+            "multiplier 1 reconstructs that host up to the decay: within "
+            "0.003978 on the AdamW host and the five Muon hosts, where the decay "
+            "write is at most 0.051 lattice spacings, and 0.05431 to 0.1186 low "
+            "on the three SGD hosts, where it reaches 0.1487.",
             "Bootstrap intervals resample whole steps (2000 draws), because "
             "consecutive steps of one run are not independent in any other sense. "
             "The first 5 steps are dropped from every table as AdamW "
@@ -351,6 +455,18 @@ def main() -> None:
             "name-based and misses 24 fp32 tensors (73,728 coordinates, 0.0395% "
             "of the pool). Both masks are computed; the difference does not move "
             "any comparison.",
+            "The shadow applies each rule without the decoupled weight-decay "
+            "write, so its 0.2452 SGD deficit is a decay-free SGD rule's. That "
+            "omission is negligible at AdamW's learning rate (0.00051 lattice "
+            "spacings) but not at SGD's (up to 0.1487), which is why the shadow "
+            "reads 0.05431 to 0.1186 below the real SGD runs. The real runs, "
+            "which carry the decay, put SGD 0.1544 below AdamW at matched "
+            "magnitude, so the direction and rough size of the effect survive "
+            "either way.",
+            "The 4/3 value is the small-update limit for a broadly spread "
+            "distribution of intended updates, which AdamW and Muon have and "
+            "SGD does not. Decay-free SGD's shadow curve reaches only 1.2368 at "
+            "the smallest magnitude swept.",
         ],
         "artifacts": [
             f"{RES}/by_condition.json", f"{RES}/by_condition.csv",

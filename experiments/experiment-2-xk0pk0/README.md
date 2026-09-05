@@ -13,21 +13,35 @@ produces the intended update?
 
 **Answer.** Both framings are wrong. Muon reproduces AdamW's overshoot to
 within 0.0031 at matched update magnitude on a shared trajectory (1.3208 vs
-1.3241), so 4/3 is not an AdamW number. SGD with momentum sits 0.2452 below it
-under identical gradients and identical bfloat16 parameters (1.0792), so it is
-not a property of the bfloat16 writer alone either. The real runs agree:
-held to AdamW's own update magnitude to within 0.2%, AdamW reaches 1.3246,
-Muon 1.3200 and SGD 1.1702.
+1.3241), so 4/3 is not an AdamW number. SGD with momentum sits well below it
+under identical gradients and identical bfloat16 parameters, so it is not a
+property of the bfloat16 writer alone either: 0.2452 below in the shadow
+control, whose rules carry no weight decay (1.0792), and 0.1544 below in the
+real decayed run at matched magnitude (1.1702 against 1.3246). The real runs
+agree with the control: held to AdamW's own update magnitude to within 0.2%,
+AdamW reaches 1.3246, Muon 1.3200 and SGD 1.1702.
 
 What the statistic reads out is where the update sits relative to the local
 lattice spacing. Writing a bfloat16 parameter rounds to nearest, so a
 coordinate whose intended update is `x` lattice spacings moves `round(x)`
-spacings; predicting each run's overshoot from its measured distribution of
-`x` alone reproduces the measurement (median gap 0.0013, worst 0.017 over nine
-runs), leaving nothing optimizer-specific. 4/3 is exactly what that prediction
-returns when `x` is uniform on the unit interval, which is the small-update
-limit rather than a constant of the writer. See `results/` and the published
-report.
+spacings. Under that write model, each run's measured distribution of `x`
+alone accounts for its overshoot (median gap 0.0013, worst 0.017 over nine
+runs), with no residual term for which rule produced the update. 4/3 is
+exactly what the model returns when `x` is uniform on the unit interval, so it
+is the small-update limit for a rule whose `x` is spread broadly enough to look
+locally uniform, which AdamW and Muon are here and SGD is not. See `results/`
+and the published report.
+
+**Caveats that matter for reading the numbers.** The shadow control omits the
+decoupled weight-decay write. That is exact at AdamW's learning rate, where the
+decay reaches 0.00051 lattice spacings, but not at SGD's, where it reaches
+0.1487, so the control's SGD is a decay-free SGD and reads 0.054 to 0.119 below
+the real SGD runs. Replaying a host's own rule through the shadow matches that
+host's intended-update norm to six figures, so the decay write is the only
+remaining difference. The stored `shadow_self_check` field always compares the
+shadow's AdamW rule against the host, so it is a reconstruction test only on
+the AdamW row and records `all_ok: false` on the other eight; the per-host test
+is the host's own rule at multiplier 1 on the shadow curve.
 
 ## Design
 

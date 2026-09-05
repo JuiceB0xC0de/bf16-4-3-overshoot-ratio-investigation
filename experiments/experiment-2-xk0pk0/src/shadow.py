@@ -25,20 +25,29 @@ rule that turns a gradient into a direction.
 The directions ``u`` are learning-rate independent (a momentum buffer
 accumulates gradients, not steps), so one pass computes the whole curve.
 
-Weight decay is omitted from the shadow.  That is exact rather than an
-approximation: the real runs measure ``decay_x_max = 0.00051``, so the decay
-term is ~1000x below the half-ULP rounding threshold at every coordinate and
-cannot change a single rounding decision.  The shadow-AdamW self-check below
-confirms it -- if decay mattered, shadow AdamW would not reproduce the real
-AdamW run.
+Weight decay is omitted from the shadow.  At AdamW's learning rate that is
+exact rather than an approximation: the AdamW run measures
+``decay_x_max = 0.00051``, so the decay term is ~1000x below the half-ULP
+rounding threshold at every coordinate and cannot change a single rounding
+decision.  It is NOT exact at the much larger learning rates the SGD
+conditions need, where ``decay_x_max`` reaches 0.0967 and 0.1487 -- large
+enough to move roundings.  The shadow's SGD rule is therefore a decay-free
+SGD, and its numbers must be read as such; the real SGD runs, which carry the
+decay, are reported separately.
 
 Self-check
 ----------
-``shadow_adamw`` at the real run's own operating point must reproduce the
-measured overshoot of the real AdamW step.  It maintains its own moment
+``self_check`` below always compares ``shadow_adamw`` at the host's own
+operating point against the host's measured overshoot.  That is a genuine
+reconstruction test only on the AdamW host, where it maintains its own moment
 buffers with its own recursion and its own model of the bf16 write, so
 agreement tests the momentum recursions, the direction algebra, and the write
-model at once.
+model at once.  On the other hosts it compares mismatched rules and its
+``ok`` flag is meaningless -- the per-host reconstruction test is instead the
+host's *own* rule read off the shadow curve at
+``REFERENCE_MULTIPLIER``, which matches the host's intended-update norm to six
+figures.  That reads within 0.003978 on the AdamW and Muon hosts and 0.054 to
+0.119 low on the SGD hosts, the omitted decay.
 """
 
 from __future__ import annotations
@@ -167,6 +176,11 @@ def self_check(shadow_row: dict, measured_overshoot: float,
     weight decay, and models the bf16 store itself.  Reproducing the number the
     real ``torch.optim.AdamW`` step produced therefore tests all of that at
     once -- including the claim that decay is below the rounding threshold.
+
+    This is only meaningful on an AdamW host.  It is always called, so the
+    eight non-AdamW rows record ``ok: False`` for comparing shadow AdamW
+    against a different host rule; read those rows' reconstruction from the
+    shadow curve for the host's own rule instead.
     """
     got = shadow_row["adamw"][f"{REFERENCE_MULTIPLIER:.6g}"]["overshoot"]
     return {
