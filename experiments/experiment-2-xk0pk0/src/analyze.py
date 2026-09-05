@@ -31,6 +31,12 @@ import numpy as np
 
 SUBSETS = ("whole", "bf16_recorded", "bf16_true", "muon_covered")
 WARMUP = 5          # AdamW's first steps are bias-correction transients
+# A run whose loss does not fall over 300 steps is not an optimizer walking a
+# training trajectory; it is an optimizer walking a diverging one.  The pooled
+# overshoot is still well defined there, but it is measured against a different
+# model state, so the row has to be read as a broken-training condition rather
+# than as a matched comparison.  Fixed before any 300-step run was analysed.
+TRAJECTORY_LOSS_DROP_MIN = 0.10
 RECORDED = {
     "step100_whole_overshoot": 1.3257174657055293,
     "step100_bf16_zero_fraction": 0.9385608528217241,
@@ -52,7 +58,7 @@ def boot_ci(values, draws: int = 2000, seed: int = 42, lo: float = 2.5,
             "hi": float(np.percentile(meds, hi)), "n": int(arr.size)}
 
 
-def load_runs(inputs: Path) -> dict:
+def load_runs(inputs: Path, min_steps: int = 100) -> dict:
     runs = {}
     for path in sorted(inputs.glob("armb_*.json")):
         if ".rows." in path.name:
@@ -63,10 +69,30 @@ def load_runs(inputs: Path) -> dict:
             continue
         if data.get("schema") != "arm-b-optimizer-overshoot/1":
             continue
-        if data.get("mode") != "run" or data.get("steps", 0) < 100:
+        if data.get("mode") != "run" or data.get("steps", 0) < min_steps:
             continue
         runs[f"{data['condition']}_{data['label']}"] = data
     return runs
+
+
+def trajectory_health(rows: list) -> dict:
+    """Did this condition actually train, or did it diverge at a matched norm?"""
+    first = st.mean(r["loss"] for r in rows[:20])
+    last = st.mean(r["loss"] for r in rows[-20:])
+    drop = first - last
+    finite = all(math.isfinite(r["loss"]) for r in rows)
+    return {
+        "loss_first20_mean": first,
+        "loss_last20_mean": last,
+        "loss_drop": drop,
+        "loss_min": min(r["loss"] for r in rows),
+        "loss_max": max(r["loss"] for r in rows),
+        "all_losses_finite": finite,
+        "grad_norm_preclip_median": st.median(r["grad_norm_preclip"] for r in rows),
+        "threshold_loss_drop": TRAJECTORY_LOSS_DROP_MIN,
+        "verdict": ("trains" if (finite and drop > TRAJECTORY_LOSS_DROP_MIN)
+                    else "does_not_train"),
+    }
 
 
 def condition_table(runs: dict) -> list:
@@ -87,6 +113,9 @@ def condition_table(runs: dict) -> list:
             "grad_norm_preclip_median": st.median(r["grad_norm_preclip"] for r in steps),
             "grad_norm_preclip_max": max(r["grad_norm_preclip"] for r in steps),
             "clip_fired_fraction": st.mean(r["clip_fired"] for r in run["rows"]),
+            "clip_fired_every_step": all(r["clip_fired"] for r in run["rows"]),
+            "clip_fired_first_100": sum(r["clip_fired"] for r in run["rows"][:100]),
+            "trajectory": trajectory_health(run["rows"]),
         }
         for subset in SUBSETS:
             entry[f"{subset}_overshoot"] = boot_ci([r[f"{subset}/overshoot"] for r in steps])
@@ -202,6 +231,8 @@ def main() -> None:
     ap.add_argument("--inputs", default=None,
                     help="directory of armb_*.json (default: artifacts dir)")
     ap.add_argument("--out", default="results")
+    ap.add_argument("--min-steps", type=int, default=100,
+                    help="ignore short probe/sweep records")
     args = ap.parse_args()
 
     import os
@@ -210,7 +241,7 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    runs = load_runs(inputs)
+    runs = load_runs(inputs, args.min_steps)
     print(f"loaded {len(runs)} runs: {sorted(runs)}")
     if not runs:
         raise SystemExit(f"no arm-b run records found under {inputs}")
@@ -228,7 +259,8 @@ def main() -> None:
     # Flat CSV of the headline comparison, for anyone who wants a spreadsheet.
     lines = ["run,condition,label,lr,n_steps,"
              "muon_overshoot,muon_lo,muon_hi,whole_overshoot,whole_lo,whole_hi,"
-             "muon_intent_norm,muon_zero_fraction,loss_last5,grad_norm_median"]
+             "muon_intent_norm,muon_zero_fraction,loss_last5,grad_norm_median,"
+             "clip_fired_fraction,trajectory"]
     for r in table:
         m, w = r["muon_covered_overshoot"], r["whole_overshoot"]
         lines.append(
@@ -237,16 +269,19 @@ def main() -> None:
             f"{w['point']:.6f},{w['lo']:.6f},{w['hi']:.6f},"
             f"{r['muon_covered_intent_norm']['point']:.6f},"
             f"{r['muon_covered_zero_fraction']['point']:.6f},"
-            f"{r['loss_last5_mean']:.4f},{r['grad_norm_preclip_median']:.4f}")
+            f"{r['loss_last5_mean']:.4f},{r['grad_norm_preclip_median']:.4f},"
+            f"{r['clip_fired_fraction']:.4f},{r['trajectory']['verdict']}")
     (out / "by_condition.csv").write_text("\n".join(lines) + "\n")
 
-    print(f"\n{'run':26s} {'lr':>9s} {'overshoot (Muon set)':>26s} {'intent':>9s} {'loss':>7s}")
+    print(f"\n{'run':26s} {'lr':>9s} {'overshoot (Muon set)':>26s} {'intent':>9s} "
+          f"{'loss':>7s}  {'clip':>5s} trajectory")
     for r in table:
         m = r["muon_covered_overshoot"]
         print(f"{r['run']:26s} {r['lr']:9.5g} "
               f"{m['point']:9.5f} [{m['lo']:.5f}, {m['hi']:.5f}] "
               f"{r['muon_covered_intent_norm']['point']:9.4f} "
-              f"{r['loss_last5_mean']:7.3f}")
+              f"{r['loss_last5_mean']:7.3f}  "
+              f"{r['clip_fired_fraction']:5.2f} {r['trajectory']['verdict']}")
     if curve:
         print(f"\nshadow control, one trajectory, at AdamW's own magnitude:")
         for name, ci in curve["at_adamw_magnitude"].items():

@@ -187,7 +187,7 @@ def run(args) -> dict:
                    step=step)
 
         if step == REFERENCE["step"] and args.condition == "adamw" and args.native:
-            reference_check = check_reference(row)
+            reference_check = check_reference(row, rows)
             print(f"[reference] {json.dumps(reference_check)}", flush=True)
 
         if step % args.log_every == 0 or step == 1:
@@ -238,8 +238,15 @@ def run(args) -> dict:
     return result
 
 
-def check_reference(row: dict) -> dict:
-    """The gate: a reimplemented instrument that misses this measures nothing."""
+def check_reference(row: dict, rows: list | None = None) -> dict:
+    """The gate: a reimplemented instrument that misses this measures nothing.
+
+    ``rows`` is the run's step history up to and including the reference step.
+    The recorded run clipped on every one of its first 100 steps, so a replay
+    whose gradients are small enough to slip under the clip is not reproducing
+    the same update distribution even if its pooled overshoot happens to land
+    in tolerance; that is checked here rather than read off the log.
+    """
     checks = {
         "loss": (row["loss"], REFERENCE["loss"], 0.05),
         "grad_norm_preclip": (row["grad_norm_preclip"],
@@ -259,6 +266,14 @@ def check_reference(row: dict) -> dict:
         # Loss and gradient norm are trajectory-sensitive diagnostics; the plan's
         # stated gate is overshoot and zero fraction.
         if not ok and name in ("whole_overshoot", "bf16_zero_fraction"):
+            out["passed"] = False
+    if rows is not None:
+        n_fired = sum(r["clip_fired"] for r in rows)
+        ok = n_fired == len(rows)
+        out["checks"]["clip_fired_every_step"] = {
+            "observed": n_fired, "recorded": len(rows),
+            "abs_gap": len(rows) - n_fired, "tol": 0, "ok": ok}
+        if not ok:
             out["passed"] = False
     return out
 
