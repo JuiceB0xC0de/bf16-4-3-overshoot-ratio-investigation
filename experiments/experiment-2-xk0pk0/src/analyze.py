@@ -137,15 +137,11 @@ def condition_table(runs: dict) -> list:
     return rows
 
 
-def shadow_curve(runs: dict) -> dict:
+def one_shadow_curve(run: dict) -> dict:
     """Overshoot vs intended-update magnitude, three optimizers, one trajectory."""
-    source = next((r for r in runs.values() if r.get("shadow_rows")), None)
-    if source is None:
-        return {}
-    rows = source["shadow_rows"][WARMUP:]
+    rows = run["shadow_rows"][WARMUP:]
     optimizers = sorted(rows[0]["scales"])
-    multipliers = sorted(rows[0]["scales"][optimizers[0]],
-                         key=lambda s: float(s))
+    multipliers = sorted(rows[0]["scales"][optimizers[0]], key=lambda s: float(s))
     curve = {}
     for name in optimizers:
         points = []
@@ -178,15 +174,50 @@ def shadow_curve(runs: dict) -> dict:
         paired[f"{name}_minus_adamw"]["n_steps_negative"] = int(sum(d < 0 for d in diffs))
         paired[f"{name}_minus_adamw"]["n_steps"] = len(diffs)
     return {
-        "source_run": f"{source['condition']}_{source['label']}",
+        "source_run": f"{run['condition']}_{run['label']}",
+        "host_optimizer": run["condition"],
+        "host_lr": run["lr"],
         "n_steps": len(rows),
         "warmup_dropped": WARMUP,
         "multipliers": [float(m) for m in multipliers],
         "curve": curve,
         "at_adamw_magnitude": at_reference,
         "paired_difference_at_adamw_magnitude": paired,
-        "self_check": source.get("shadow_self_check"),
+        "self_check": run.get("shadow_self_check"),
     }
+
+
+def shadow_curve(runs: dict) -> dict:
+    """One shadow curve per host trajectory.
+
+    Every condition carries the shadow, so the same three update rules are
+    compared at matched magnitude on six different model states.  A difference
+    that survives all six is not a property of where AdamW happened to be.
+    """
+    sources = {k: one_shadow_curve(r) for k, r in sorted(runs.items())
+               if r.get("shadow_rows")}
+    if not sources:
+        return {}
+    primary = ("adamw_native" if "adamw_native" in sources
+               else sorted(sources)[0])
+    across = {}
+    for opt in ("sgd", "muon"):
+        key = f"{opt}_minus_adamw"
+        per = {s: c["paired_difference_at_adamw_magnitude"][key]
+               for s, c in sources.items()
+               if key in c["paired_difference_at_adamw_magnitude"]}
+        if per:
+            across[key] = {
+                "per_trajectory": per,
+                "n_trajectories": len(per),
+                "n_trajectories_negative": sum(v["point"] < 0 for v in per.values()),
+                "n_trajectories_interval_excludes_zero": sum(
+                    v["hi"] < 0 or v["lo"] > 0 for v in per.values()),
+                "min_point": min(v["point"] for v in per.values()),
+                "max_point": max(v["point"] for v in per.values()),
+            }
+    return {"primary": primary, "sources": sources,
+            "across_trajectories": across, **sources[primary]}
 
 
 def step_histograms(runs: dict) -> dict:
@@ -283,13 +314,21 @@ def main() -> None:
               f"{r['loss_last5_mean']:7.3f}  "
               f"{r['clip_fired_fraction']:5.2f} {r['trajectory']['verdict']}")
     if curve:
-        print(f"\nshadow control, one trajectory, at AdamW's own magnitude:")
+        print(f"\nshadow control on {curve['primary']}, at AdamW's own magnitude:")
         for name, ci in curve["at_adamw_magnitude"].items():
             print(f"  {name:8s} {ci['point']:.5f} [{ci['lo']:.5f}, {ci['hi']:.5f}]")
         for name, ci in curve["paired_difference_at_adamw_magnitude"].items():
             print(f"  {name:24s} {ci['point']:+.5f} [{ci['lo']:+.5f}, {ci['hi']:+.5f}]"
                   f"  ({ci['n_steps_negative']}/{ci['n_steps']} steps negative)")
         print(f"  self-check: {curve['self_check']}")
+        print("\nsame comparison replicated on every host trajectory:")
+        for key, agg in curve.get("across_trajectories", {}).items():
+            print(f"  {key:24s} range [{agg['min_point']:+.5f}, {agg['max_point']:+.5f}]"
+                  f"  {agg['n_trajectories_negative']}/{agg['n_trajectories']} negative,"
+                  f" {agg['n_trajectories_interval_excludes_zero']} intervals exclude 0")
+            for src, ci in agg["per_trajectory"].items():
+                print(f"      {src:24s} {ci['point']:+.5f} "
+                      f"[{ci['lo']:+.5f}, {ci['hi']:+.5f}]")
     print(f"\nwrote {out}/by_condition.json, shadow_curve.json, "
           f"step_histograms.json, by_condition.csv")
 

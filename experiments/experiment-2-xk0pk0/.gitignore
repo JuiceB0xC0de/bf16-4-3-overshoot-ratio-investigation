@@ -21,3 +21,7 @@ __pycache__/
 *.pyc
 # Stranded _atomic_write temps (name.<pid>.<hex>.tmp) from a crashed write.
 *.*.*.tmp
+
+# synthetic fixture output used only to exercise src/figures.py
+scratch/fixture_out/
+scratch/fixture_results/

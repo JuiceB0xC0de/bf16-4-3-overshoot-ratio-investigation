@@ -1,0 +1,382 @@
+"""Build the report figures from the analysis tables.
+
+Reads ``results/by_condition.json``, ``results/shadow_curve.json`` and
+``results/step_histograms.json`` and writes one figure bundle per display
+under ``figures/``.  Nothing here recomputes a measurement; every value comes
+from the analysis tables, so a figure and the prose beside it cannot drift.
+
+    uv run --no-sync python src/figures.py
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import re
+from pathlib import Path
+
+import plotly.graph_objects as go
+from silico_figures import (EDITORIAL_8, add_reference_line, apply_theme,
+                            save_figure_bundle)
+
+FOUR_THIRDS = 4.0 / 3.0
+# AdamW is the optimizer the recorded run used, so it is the object of study and
+# holds the emphasis colour in every figure it appears in.  Written once and
+# extended, never reshuffled.
+COLORS = {"adamw": EDITORIAL_8[0], "muon": EDITORIAL_8[1], "sgd": EDITORIAL_8[2]}
+PRETTY = {"adamw": "AdamW", "sgd": "SGD + momentum", "muon": "Muon"}
+LABEL = {"native": "native", "scale_matched": "scale-matched"}
+
+
+def _lighten(hex_color: str, amount: float) -> str:
+    """Same hue, higher lightness: the scale-matched twin of an optimizer."""
+    h = hex_color.lstrip("#")
+    rgb = [int(h[i:i + 2], 16) for i in (0, 2, 4)]
+    rgb = [int(round(c + (255 - c) * amount)) for c in rgb]
+    return "#" + "".join(f"{c:02X}" for c in rgb)
+
+
+def _rgba(hex_color: str, alpha: float) -> str:
+    h = hex_color.lstrip("#")
+    r, g, b = (int(h[i:i + 2], 16) for i in (0, 2, 4))
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def series_color(condition: str, label: str) -> str:
+    """Native keeps the optimizer's colour; scale-matched is its lighter twin,
+    so the two never rely on position alone to be told apart."""
+    base = COLORS[condition]
+    return base if label == "native" else _lighten(base, 0.45)
+
+
+def series_name(condition: str, label: str) -> str:
+    return f"{PRETTY[condition]}, {LABEL.get(label, label)}"
+
+
+def load(results: Path) -> tuple:
+    by = json.loads((results / "by_condition.json").read_text())
+    curve = json.loads((results / "shadow_curve.json").read_text())
+    hist = json.loads((results / "step_histograms.json").read_text())
+    return by, curve, hist
+
+
+def write_entity_colors(root: Path) -> None:
+    path = root / "figures" / "entity_colors.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    existing = json.loads(path.read_text()) if path.exists() else {}
+    for cond in COLORS:
+        for label in ("native", "scale_matched"):
+            existing[series_name(cond, label)] = series_color(cond, label)
+        existing[PRETTY[cond]] = COLORS[cond]
+    path.write_text(json.dumps(existing, indent=1))
+
+
+# --------------------------------------------------------------------------
+# Figure 1 -- the planned six-run comparison.
+# --------------------------------------------------------------------------
+def fig_by_condition(by: dict, subset: str = "muon_covered") -> tuple:
+    """Pooled overshoot per run, with the uniform-x idealisation as reference.
+
+    Dot-and-interval rather than bars: overshoot has no meaningful zero (a
+    delivered step of zero size makes the ratio undefined, not zero), and the
+    bootstrap interval is the evidence.
+    """
+    rows = sorted(by["rows"], key=lambda r: (r["condition"], r["label"]))
+    fig = go.Figure()
+    data = []
+    groups: dict = {}
+    for r in rows:
+        ci = r[f"{subset}_overshoot"]
+        broke = r["trajectory"]["verdict"] != "trains"
+        name = (f"{series_name(r['condition'], r['label'])} (lr {r['lr']:g})"
+                + ("  \u2014 did not train" if broke else ""))
+        key = (r["condition"], r["label"])
+        groups.setdefault(key, []).append((name, ci, broke))
+        data.append({"run": name, "condition": r["condition"], "label": r["label"],
+                     "lr": r["lr"], "overshoot": ci["point"], "lo": ci["lo"],
+                     "hi": ci["hi"], "n_steps": ci["n"], "trains": not broke})
+    for (cond, label), items in groups.items():
+        colour = series_color(cond, label)
+        fig.add_trace(go.Scatter(
+            x=[c["point"] for _, c, _ in items],
+            y=[n for n, _, _ in items], mode="markers",
+            marker=dict(color=colour, size=13,
+                        symbol=["circle-open" if b else "circle"
+                                for _, _, b in items],
+                        line=dict(width=2.5, color=colour)),
+            error_x=dict(type="data", symmetric=False,
+                         array=[c["hi"] - c["point"] for _, c, _ in items],
+                         arrayminus=[c["point"] - c["lo"] for _, c, _ in items],
+                         color=colour, thickness=1.4, width=5),
+            name=series_name(cond, label), showlegend=False,
+            hovertemplate="%{y}<br>overshoot %{x:.4f}<extra></extra>"))
+    # The y-axis already names every run, so a six-entry legend would repeat it.
+    add_reference_line(fig, x=FOUR_THIRDS, label="4/3 = 1.333")
+    fig.update_xaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
+    fig.update_yaxes(title_text="Optimizer, learning-rate setting")
+    apply_theme(fig, height=430)
+    return fig, data
+
+
+# --------------------------------------------------------------------------
+# Figure 2 -- the confound-free control.
+# --------------------------------------------------------------------------
+def fig_shadow_curve(curve: dict) -> tuple:
+    """Overshoot against intended update magnitude on one shared trajectory."""
+    src = curve["sources"][curve["primary"]]
+    fig = go.Figure()
+    data = []
+    for name in ("sgd", "muon", "adamw"):          # AdamW drawn last, on top
+        pts = src["curve"][name]
+        xs = [p["intent_norm_median"] for p in pts]
+        lo = [p["overshoot"]["lo"] for p in pts]
+        hi = [p["overshoot"]["hi"] for p in pts]
+        mid = [p["overshoot"]["point"] for p in pts]
+        # The bootstrap interval rides on the line itself as error bars rather
+        # than as a filled band: at this width three translucent bands overlap
+        # into mud, and these intervals are narrow enough to read as ticks.
+        fig.add_trace(go.Scatter(
+            x=xs, y=mid, mode="lines+markers", name=PRETTY[name],
+            line=dict(color=COLORS[name], width=2.6),
+            marker=dict(color=COLORS[name], size=7),
+            error_y=dict(type="data", symmetric=False,
+                         array=[h - m for h, m in zip(hi, mid)],
+                         arrayminus=[m - l for m, l in zip(mid, lo)],
+                         color=COLORS[name], thickness=1.2, width=3),
+            hovertemplate=(f"{PRETTY[name]}<br>intent norm %{{x:.4g}}"
+                           "<br>overshoot %{y:.4f}<extra></extra>")))
+        for p in pts:
+            data.append({"optimizer": PRETTY[name], "multiplier": p["multiplier"],
+                         "intent_norm": p["intent_norm_median"],
+                         "overshoot": p["overshoot"]["point"],
+                         "lo": p["overshoot"]["lo"], "hi": p["overshoot"]["hi"]})
+    add_reference_line(fig, y=FOUR_THIRDS, label="4/3 = 1.333")
+    fig.update_xaxes(title_text="Intended update norm (log)", type="log")
+    fig.update_yaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
+    apply_theme(fig, height=440)
+    return fig, data
+
+
+# --------------------------------------------------------------------------
+# Figure 3 -- does the gap survive a change of trajectory?
+# --------------------------------------------------------------------------
+def fig_shadow_replication(curve: dict) -> tuple:
+    """Paired per-step difference from AdamW, at matched magnitude, per host."""
+    across = curve.get("across_trajectories", {})
+    if not across:
+        return None, []
+    fig = go.Figure()
+    data = []
+    order = sorted(curve["sources"])
+    for key, opt in (("sgd_minus_adamw", "sgd"), ("muon_minus_adamw", "muon")):
+        agg = across.get(key)
+        if not agg:
+            continue
+        xs, ys, plus, minus = [], [], [], []
+        for src in order:
+            ci = agg["per_trajectory"].get(src)
+            if ci is None:
+                continue
+            host = curve["sources"][src]
+            label = (f"{PRETTY[host['host_optimizer']]}, "
+                     f"{LABEL.get(src.split('_', 1)[1], src)}")
+            xs.append(ci["point"])
+            ys.append(label)
+            plus.append(ci["hi"] - ci["point"])
+            minus.append(ci["point"] - ci["lo"])
+            data.append({"comparison": f"{PRETTY[opt]} − AdamW",
+                         "host_trajectory": label, "difference": ci["point"],
+                         "lo": ci["lo"], "hi": ci["hi"],
+                         "n_steps": ci["n"],
+                         "n_steps_negative": ci["n_steps_negative"]})
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys, mode="markers", name=f"{PRETTY[opt]} − AdamW",
+            marker=dict(color=COLORS[opt], size=12),
+            error_x=dict(type="data", symmetric=False, array=plus,
+                         arrayminus=minus, color=COLORS[opt],
+                         thickness=1.4, width=5),
+            hovertemplate=(f"{PRETTY[opt]} − AdamW<br>%{{y}}"
+                           "<br>difference %{x:+.4f}<extra></extra>")))
+    add_reference_line(fig, x=0.0, label="no difference")
+    fig.update_xaxes(title_text="Overshoot difference from AdamW at matched magnitude")
+    fig.update_yaxes(title_text="Host trajectory the shadow rode on")
+    apply_theme(fig, height=420)
+    return fig, data
+
+
+# --------------------------------------------------------------------------
+# Figure 4 -- the mechanism: how far each coordinate actually moved.
+# --------------------------------------------------------------------------
+def fig_step_histogram(hist: dict, by: dict, max_ulp: int = 6) -> tuple:
+    """Share of coordinates that moved k lattice steps, per condition.
+
+    Drawn as connected markers rather than bars: the share spans four decades,
+    which needs a log axis, and a bar on a log axis no longer encodes its value
+    by length.  The move count is an ordered integer axis, so a line is a fair
+    reading of it.
+    """
+    meta = {r["run"]: r for r in by["rows"]}
+    fig = go.Figure()
+    data = []
+    keys = [k for k in sorted(hist)
+            if meta.get(k, {}).get("trajectory", {}).get("verdict", "trains")
+            == "trains"]
+    bins = list(range(max_ulp + 1))
+    cats = [str(b) for b in bins] + [f"≥{max_ulp + 1}"]
+    for key in keys:
+        h = hist[key]
+        share = h["share"]
+        ys = [share[k] for k in bins]
+        ys.append(sum(share[max_ulp + 1:]) + h["above_edges"] / h["total"])
+        r = meta.get(key, {})
+        cond, label = r.get("condition", key.split("_")[0]), r.get("label", "native")
+        fig.add_trace(go.Scatter(
+            x=cats, y=ys, mode="lines+markers",
+            name=series_name(cond, label),
+            line=dict(color=series_color(cond, label), width=2.4,
+                      dash="solid" if label == "native" else "dot"),
+            marker=dict(color=series_color(cond, label), size=8,
+                        symbol="circle" if label == "native" else "diamond"),
+            hovertemplate="%{fullData.name}<br>%{x} ULP: %{y:.5f}<extra></extra>"))
+        for b, y in zip(cats, ys):
+            data.append({"run": key, "optimizer": PRETTY[cond], "label": label,
+                         "ulp_step": b, "share": y})
+    fig.update_xaxes(title_text="Realized move (lattice steps, ULPs)", type="category")
+    fig.update_yaxes(title_text="Share of coordinates (log)", type="log")
+    apply_theme(fig, height=430)
+    return fig, data
+
+
+# --------------------------------------------------------------------------
+# Figure 5 -- why 4/3 is only an idealisation.
+# --------------------------------------------------------------------------
+def fig_x_distribution(hist: dict, by: dict) -> tuple:
+    """Distribution of x = |intended update| / ULP, per condition.
+
+    The 4/3 closed form assumes x is uniform on the unit interval.  This is the
+    measured x, pooled over the Muon-covered set at the last full capture.
+    """
+    meta = {r["run"]: r for r in by["rows"]}
+    fig = go.Figure()
+    data = []
+    keys = [k for k in sorted(hist)
+            if meta.get(k, {}).get("trajectory", {}).get("verdict", "trains")
+            == "trains"]
+    for key in keys:
+        h = hist[key]["x_log10_hist"]
+        edges, counts = h["edges"], h["counts"]
+        total = sum(counts) + h["below"] + h["above"]
+        if not total:
+            continue
+        centres = [10.0 ** (0.5 * (edges[i] + edges[i + 1]))
+                   for i in range(len(counts))]
+        share = [c / total for c in counts]
+        r = meta.get(key, {})
+        cond, label = r.get("condition", key.split("_")[0]), r.get("label", "native")
+        fig.add_trace(go.Scatter(
+            x=centres, y=share, mode="lines",
+            name=series_name(cond, label),
+            line=dict(color=series_color(cond, label), width=2.4,
+                      dash="solid" if label == "native" else "dot"),
+            hovertemplate="%{fullData.name}<br>x = %{x:.3g}<br>share %{y:.5f}"
+                          "<extra></extra>"))
+        for c, s in zip(centres, share):
+            data.append({"run": key, "optimizer": PRETTY[cond], "label": label,
+                         "x": c, "share": s})
+    add_reference_line(fig, x=1.0, label="x = 1 ULP")
+    fig.update_xaxes(title_text="x = intended update ÷ lattice spacing (log)", type="log")
+    fig.update_yaxes(title_text="Share of coordinates per bin")
+    apply_theme(fig, height=430)
+    return fig, data
+
+
+def verify_bundle(bundles: str, name: str, min_series: int) -> dict:
+    """Read the saved render back and confirm the series actually survived.
+
+    A wrong column name drops a trace silently and the file still saves, so the
+    check is on the embedded trace JSON rather than on the return value of the
+    call that wrote it.
+    """
+    path = Path(bundles) / name / f"{name}.html"
+    html = path.read_text()
+    blob = re.search(r"Plotly\.newPlot\(\s*(?:\"[^\"]+\"|'[^']+')\s*,\s*(\[.*)",
+                     html, re.S)
+    if blob is None:
+        raise SystemExit(f"{name}: no Plotly payload in {path}")
+    decoder = json.JSONDecoder()
+    traces, _ = decoder.raw_decode(blob.group(1))
+    real = [t for t in traces if t.get("x") or t.get("y")]
+    lengths = [len(t.get("x") or t.get("y") or []) for t in real]
+    if len(real) < min_series:
+        raise SystemExit(f"{name}: {len(real)} non-empty series, expected "
+                         f"at least {min_series}")
+    if any(n == 0 for n in lengths):
+        raise SystemExit(f"{name}: an embedded series is empty")
+    finite = 0
+    for t in real:
+        for axis in ("x", "y"):
+            vals = t.get(axis) or []
+            if vals and all(isinstance(v, (int, float)) for v in vals):
+                finite += sum(1 for v in vals if math.isfinite(v))
+    return {"figure": name, "n_series": len(real), "points": sum(lengths),
+            "finite_y": finite,
+            "names": [t.get("name") for t in real if t.get("name")]}
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--results", default="results")
+    ap.add_argument("--root", default=".")
+    args = ap.parse_args()
+    root, results = Path(args.root), Path(args.results)
+    bundles = str(root / "figures")
+    by, curve, hist = load(results)
+    write_entity_colors(root)
+
+    built = []
+    fig, data = fig_by_condition(by)
+    save_figure_bundle(fig, "overshoot_by_condition", data=data, root=bundles, alt=(
+        "Pooled overshoot with bootstrap intervals for each of the six runs, "
+        "against a reference line at 4/3."))
+    built.append("overshoot_by_condition")
+
+    fig, data = fig_shadow_curve(curve)
+    save_figure_bundle(fig, "shadow_overshoot_vs_magnitude", data=data, root=bundles, alt=(
+        "Pooled overshoot against intended update norm on a log x axis for "
+        "AdamW, SGD with momentum, and Muon, measured on one shared trajectory."))
+    built.append("shadow_overshoot_vs_magnitude")
+
+    fig, data = fig_shadow_replication(curve)
+    if fig is not None:
+        save_figure_bundle(fig, "shadow_difference_by_trajectory", data=data,
+                           root=bundles, alt=(
+            "Paired overshoot difference from AdamW at matched update magnitude, "
+            "shown separately for each host trajectory, against a zero line."))
+        built.append("shadow_difference_by_trajectory")
+
+    fig, data = fig_step_histogram(hist, by)
+    save_figure_bundle(fig, "ulp_step_histogram", data=data, root=bundles, alt=(
+        "Share of coordinates moving zero, one, two or more lattice steps, "
+        "grouped by optimizer, on a log share axis."))
+    built.append("ulp_step_histogram")
+
+    fig, data = fig_x_distribution(hist, by)
+    save_figure_bundle(fig, "x_distribution", data=data, root=bundles, alt=(
+        "Distribution of the intended update divided by the local lattice "
+        "spacing, per optimizer, on a log x axis with a marker at one ULP."))
+    built.append("x_distribution")
+
+    expect = {"overshoot_by_condition": 2, "shadow_overshoot_vs_magnitude": 3,
+              "shadow_difference_by_trajectory": 2, "ulp_step_histogram": 2,
+              "x_distribution": 2}
+    checks = [verify_bundle(bundles, n, expect[n]) for n in built]
+    for c in checks:
+        print(f"  checked {c['figure']:34s} {c['n_series']} series, "
+              f"{c['points']} points, {c['finite_y']} finite y")
+    (root / "figures" / "figure_checks.json").write_text(json.dumps(checks, indent=1))
+    print("built bundles: " + ", ".join(built))
+
+
+if __name__ == "__main__":
+    main()
