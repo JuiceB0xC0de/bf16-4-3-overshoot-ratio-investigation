@@ -26,7 +26,9 @@ FOUR_THIRDS = 4.0 / 3.0
 # extended, never reshuffled.
 COLORS = {"adamw": EDITORIAL_8[0], "muon": EDITORIAL_8[1], "sgd": EDITORIAL_8[2]}
 PRETTY = {"adamw": "AdamW", "sgd": "SGD + momentum", "muon": "Muon"}
-LABEL = {"native": "native", "scale_matched": "scale-matched"}
+LABEL = {"native": "native", "scale_matched": "scale-matched (probe)",
+         "scale_matched_v2": "scale-matched", "lr0.005": "lr 0.005",
+         "lr0.01": "lr 0.01"}
 
 
 def _lighten(hex_color: str, amount: float) -> str:
@@ -115,7 +117,7 @@ def fig_by_condition(by: dict, subset: str = "muon_covered") -> tuple:
     add_reference_line(fig, x=FOUR_THIRDS, label="4/3 = 1.333")
     fig.update_xaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
     fig.update_yaxes(title_text="Optimizer, learning-rate setting")
-    apply_theme(fig, height=430)
+    apply_theme(fig, height=max(320, 150 + 46 * len(data)))
     return fig, data
 
 
@@ -153,6 +155,45 @@ def fig_shadow_curve(curve: dict) -> tuple:
                          "lo": p["overshoot"]["lo"], "hi": p["overshoot"]["hi"]})
     add_reference_line(fig, y=FOUR_THIRDS, label="4/3 = 1.333")
     fig.update_xaxes(title_text="Intended update norm (log)", type="log")
+    fig.update_yaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
+    apply_theme(fig, height=440)
+    return fig, data
+
+
+# --------------------------------------------------------------------------
+# Figure 2b -- the same sweep read against how much actually moved.
+# --------------------------------------------------------------------------
+def fig_shadow_vs_delivery(curve: dict) -> tuple:
+    """Overshoot against the fraction of coordinates that moved at all.
+
+    Matching the update norm leaves open the reading that SGD simply takes
+    smaller effective steps.  On this axis that reading is closed: at the same
+    fraction of coordinates delivered, the rules still separate.
+    """
+    src = curve["sources"][curve["primary"]]
+    fig = go.Figure()
+    data = []
+    for name in ("sgd", "muon", "adamw"):
+        pts = src["curve"][name]
+        xs = [1.0 - p["zero_fraction"]["point"] for p in pts]
+        ys = [p["overshoot"]["point"] for p in pts]
+        lo = [p["overshoot"]["lo"] for p in pts]
+        hi = [p["overshoot"]["hi"] for p in pts]
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys, mode="lines+markers", name=PRETTY[name],
+            line=dict(color=COLORS[name], width=2.6),
+            marker=dict(color=COLORS[name], size=7),
+            error_y=dict(type="data", symmetric=False,
+                         array=[h - m for h, m in zip(hi, ys)],
+                         arrayminus=[m - l for m, l in zip(ys, lo)],
+                         color=COLORS[name], thickness=1.2, width=3),
+            hovertemplate=(f"{PRETTY[name]}<br>delivered %{{x:.4f}}"
+                           "<br>overshoot %{y:.4f}<extra></extra>")))
+        for x, y, l, h in zip(xs, ys, lo, hi):
+            data.append({"optimizer": PRETTY[name], "delivered_fraction": x,
+                         "overshoot": y, "lo": l, "hi": h})
+    add_reference_line(fig, y=FOUR_THIRDS, label="4/3 = 1.333")
+    fig.update_xaxes(title_text="Fraction of coordinates that moved (log)", type="log")
     fig.update_yaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
     apply_theme(fig, height=440)
     return fig, data
@@ -347,6 +388,13 @@ def main() -> None:
         "AdamW, SGD with momentum, and Muon, measured on one shared trajectory."))
     built.append("shadow_overshoot_vs_magnitude")
 
+    fig, data = fig_shadow_vs_delivery(curve)
+    save_figure_bundle(fig, "shadow_overshoot_vs_delivery", data=data, root=bundles,
+                       alt=("Pooled overshoot against the fraction of coordinates "
+                            "that moved at least one lattice step, on a log x axis, "
+                            "for the three update rules on one shared trajectory."))
+    built.append("shadow_overshoot_vs_delivery")
+
     fig, data = fig_shadow_replication(curve)
     if fig is not None:
         save_figure_bundle(fig, "shadow_difference_by_trajectory", data=data,
@@ -368,6 +416,7 @@ def main() -> None:
     built.append("x_distribution")
 
     expect = {"overshoot_by_condition": 2, "shadow_overshoot_vs_magnitude": 3,
+              "shadow_overshoot_vs_delivery": 3,
               "shadow_difference_by_trajectory": 2, "ulp_step_histogram": 2,
               "x_distribution": 2}
     checks = [verify_bundle(bundles, n, expect[n]) for n in built]

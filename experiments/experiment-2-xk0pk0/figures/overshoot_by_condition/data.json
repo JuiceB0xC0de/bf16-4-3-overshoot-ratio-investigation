@@ -1,0 +1,57 @@
+[
+  {
+    "run": "AdamW, native (lr 0.0002)",
+    "condition": "adamw",
+    "label": "native",
+    "lr": 0.0002,
+    "overshoot": 1.3246336088812956,
+    "lo": 1.3245277544924903,
+    "hi": 1.3247424331289668,
+    "n_steps": 295,
+    "trains": true
+  },
+  {
+    "run": "Muon, native (lr 0.02)  \u2014 did not train",
+    "condition": "muon",
+    "label": "native",
+    "lr": 0.02,
+    "overshoot": 1.0924121912663023,
+    "lo": 1.0903329418365217,
+    "hi": 1.0929456190934024,
+    "n_steps": 295,
+    "trains": false
+  },
+  {
+    "run": "Muon, scale-matched (probe) (lr 0.00243)",
+    "condition": "muon",
+    "label": "scale_matched",
+    "lr": 0.00243,
+    "overshoot": 1.3058336631135963,
+    "lo": 1.3057768223381763,
+    "hi": 1.3058701827706352,
+    "n_steps": 295,
+    "trains": true
+  },
+  {
+    "run": "SGD + momentum, native (lr 0.01)",
+    "condition": "sgd",
+    "label": "native",
+    "lr": 0.01,
+    "overshoot": 1.2367834894651195,
+    "lo": 1.234895020247334,
+    "hi": 1.2383792747173623,
+    "n_steps": 295,
+    "trains": true
+  },
+  {
+    "run": "SGD + momentum, scale-matched (probe) (lr 0.0583)",
+    "condition": "sgd",
+    "label": "scale_matched",
+    "lr": 0.0583,
+    "overshoot": 1.1495991346775274,
+    "lo": 1.147630889091695,
+    "hi": 1.1507847627457186,
+    "n_steps": 295,
+    "trains": true
+  }
+]

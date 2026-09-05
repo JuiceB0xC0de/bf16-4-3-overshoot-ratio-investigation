@@ -1,0 +1,1 @@
+Distribution of the intended update divided by the local lattice spacing, per optimizer, on a log x axis with a marker at one ULP.

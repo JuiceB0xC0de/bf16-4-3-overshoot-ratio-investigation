@@ -1,0 +1,92 @@
+[
+  {
+    "comparison": "SGD + momentum \u2212 AdamW",
+    "host_trajectory": "AdamW, native",
+    "difference": -0.24520561946661212,
+    "lo": -0.2462440143037865,
+    "hi": -0.24398111486007254,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "SGD + momentum \u2212 AdamW",
+    "host_trajectory": "Muon, native",
+    "difference": -0.06653489657944323,
+    "lo": -0.06746409599660153,
+    "hi": -0.06599307945218724,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "SGD + momentum \u2212 AdamW",
+    "host_trajectory": "Muon, scale-matched (probe)",
+    "difference": -0.24030180997167228,
+    "lo": -0.2418352110870025,
+    "hi": -0.2391702200411252,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "SGD + momentum \u2212 AdamW",
+    "host_trajectory": "SGD + momentum, native",
+    "difference": -0.21325415911028256,
+    "lo": -0.21454749447472143,
+    "hi": -0.21159359697818259,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "SGD + momentum \u2212 AdamW",
+    "host_trajectory": "SGD + momentum, scale-matched (probe)",
+    "difference": -0.22326872308335433,
+    "lo": -0.22538815334442042,
+    "hi": -0.22207174629305015,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "AdamW, native",
+    "difference": -0.003125612111904319,
+    "lo": -0.0035353125262365115,
+    "hi": -0.0025514654026807305,
+    "n_steps": 295,
+    "n_steps_negative": 251
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "Muon, native",
+    "difference": 0.003136076545458888,
+    "lo": 0.001951115081359367,
+    "hi": 0.004420496324925027,
+    "n_steps": 295,
+    "n_steps_negative": 108
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "Muon, scale-matched (probe)",
+    "difference": -0.01077786046272089,
+    "lo": -0.010862098662326014,
+    "hi": -0.010684019141862455,
+    "n_steps": 295,
+    "n_steps_negative": 292
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "SGD + momentum, native",
+    "difference": -0.0014976070192564972,
+    "lo": -0.002131377871076978,
+    "hi": -0.0009079942028835664,
+    "n_steps": 295,
+    "n_steps_negative": 195
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "SGD + momentum, scale-matched (probe)",
+    "difference": -0.011180194687907763,
+    "lo": -0.011746818260401914,
+    "hi": -0.010559181971523168,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  }
+]

@@ -1,0 +1,71 @@
+[
+ {
+  "figure": "overshoot_by_condition",
+  "n_series": 5,
+  "points": 5,
+  "finite_y": 5,
+  "names": [
+   "AdamW, native",
+   "Muon, native",
+   "Muon, scale-matched (probe)",
+   "SGD + momentum, native",
+   "SGD + momentum, scale-matched (probe)"
+  ]
+ },
+ {
+  "figure": "shadow_overshoot_vs_magnitude",
+  "n_series": 3,
+  "points": 27,
+  "finite_y": 54,
+  "names": [
+   "SGD + momentum",
+   "Muon",
+   "AdamW"
+  ]
+ },
+ {
+  "figure": "shadow_overshoot_vs_delivery",
+  "n_series": 3,
+  "points": 27,
+  "finite_y": 54,
+  "names": [
+   "SGD + momentum",
+   "Muon",
+   "AdamW"
+  ]
+ },
+ {
+  "figure": "shadow_difference_by_trajectory",
+  "n_series": 2,
+  "points": 10,
+  "finite_y": 10,
+  "names": [
+   "SGD + momentum \u2212 AdamW",
+   "Muon \u2212 AdamW"
+  ]
+ },
+ {
+  "figure": "ulp_step_histogram",
+  "n_series": 4,
+  "points": 32,
+  "finite_y": 32,
+  "names": [
+   "AdamW, native",
+   "Muon, scale-matched (probe)",
+   "SGD + momentum, native",
+   "SGD + momentum, scale-matched (probe)"
+  ]
+ },
+ {
+  "figure": "x_distribution",
+  "n_series": 4,
+  "points": 2600,
+  "finite_y": 5200,
+  "names": [
+   "AdamW, native",
+   "Muon, scale-matched (probe)",
+   "SGD + momentum, native",
+   "SGD + momentum, scale-matched (probe)"
+  ]
+ }
+]

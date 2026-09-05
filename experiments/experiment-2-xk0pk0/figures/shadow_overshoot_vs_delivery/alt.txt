@@ -1,0 +1,1 @@
+Pooled overshoot against the fraction of coordinates that moved at least one lattice step, on a log x axis, for the three update rules on one shared trajectory.

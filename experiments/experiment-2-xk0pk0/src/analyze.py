@@ -187,6 +187,41 @@ def one_shadow_curve(run: dict) -> dict:
     }
 
 
+def matched_delivery(src: dict, grid=(0.03, 0.05, 0.09, 0.15, 0.25)) -> dict:
+    """Compare the rules at a matched *delivered fraction*, not a matched norm.
+
+    Matching the update norm still lets one rule move fewer coordinates than
+    another, so a difference in overshoot could be read as "SGD simply takes
+    smaller effective steps".  Interpolating each rule's curve to a common
+    fraction of coordinates that actually moved removes that reading: what is
+    left is the shape of the update distribution near the rounding threshold.
+    """
+    out = {"delivered_fraction_grid": list(grid), "at": {}}
+    for target in grid:
+        point = {}
+        for name, pts in src["curve"].items():
+            xs = [1.0 - p["zero_fraction"]["point"] for p in pts]
+            ys = [p["overshoot"]["point"] for p in pts]
+            pairs = sorted(zip(xs, ys))
+            xs = [a for a, _ in pairs]
+            ys = [b for _, b in pairs]
+            if not (xs[0] <= target <= xs[-1]):
+                continue                    # do not extrapolate past the sweep
+            i = max(i for i in range(len(xs)) if xs[i] <= target)
+            if i == len(xs) - 1:
+                point[name] = ys[-1]
+                continue
+            lx, hx = math.log10(xs[i]), math.log10(xs[i + 1])
+            w = (math.log10(target) - lx) / (hx - lx) if hx > lx else 0.0
+            point[name] = ys[i] + w * (ys[i + 1] - ys[i])
+        if "adamw" in point:
+            for name in list(point):
+                if name != "adamw":
+                    point[f"{name}_minus_adamw"] = point[name] - point["adamw"]
+        out["at"][f"{target:g}"] = point
+    return out
+
+
 def shadow_curve(runs: dict) -> dict:
     """One shadow curve per host trajectory.
 
@@ -216,6 +251,8 @@ def shadow_curve(runs: dict) -> dict:
                 "min_point": min(v["point"] for v in per.values()),
                 "max_point": max(v["point"] for v in per.values()),
             }
+    for c in sources.values():
+        c["matched_delivery"] = matched_delivery(c)
     return {"primary": primary, "sources": sources,
             "across_trajectories": across, **sources[primary]}
 
@@ -321,6 +358,19 @@ def main() -> None:
             print(f"  {name:24s} {ci['point']:+.5f} [{ci['lo']:+.5f}, {ci['hi']:+.5f}]"
                   f"  ({ci['n_steps_negative']}/{ci['n_steps']} steps negative)")
         print(f"  self-check: {curve['self_check']}")
+        md = curve["sources"][curve["primary"]]["matched_delivery"]
+        print("\nat a matched fraction of coordinates delivered "
+              "(interpolated along each rule's own curve):")
+        print(f"  {'delivered':>9s} {'adamw':>8s} {'muon':>8s} {'sgd':>8s} "
+              f"{'muon-adamw':>11s} {'sgd-adamw':>11s}")
+        for frac, pt in md["at"].items():
+            if "adamw" not in pt:
+                continue
+            print(f"  {frac:>9s} {pt['adamw']:8.5f} "
+                  f"{pt.get('muon', float('nan')):8.5f} "
+                  f"{pt.get('sgd', float('nan')):8.5f} "
+                  f"{pt.get('muon_minus_adamw', float('nan')):+11.5f} "
+                  f"{pt.get('sgd_minus_adamw', float('nan')):+11.5f}")
         print("\nsame comparison replicated on every host trajectory:")
         for key, agg in curve.get("across_trajectories", {}).items():
             print(f"  {key:24s} range [{agg['min_point']:+.5f}, {agg['max_point']:+.5f}]"

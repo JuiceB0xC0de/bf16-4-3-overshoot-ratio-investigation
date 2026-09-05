@@ -1,0 +1,226 @@
+[
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "0",
+    "share": 0.9093825261395677
+  },
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "1",
+    "share": 0.05985923376873898
+  },
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "2",
+    "share": 0.012312422132443377
+  },
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "3",
+    "share": 0.005261442360966073
+  },
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "4",
+    "share": 0.0029318177532952753
+  },
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "5",
+    "share": 0.0018565837336396546
+  },
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "6",
+    "share": 0.0013022646314861228
+  },
+  {
+    "run": "adamw_native",
+    "optimizer": "AdamW",
+    "label": "native",
+    "ulp_step": "\u22657",
+    "share": 0.007093709479862851
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "0",
+    "share": 0.8594882660209552
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "1",
+    "share": 0.09168048158590922
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "2",
+    "share": 0.019372364831349208
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "3",
+    "share": 0.008440664106011556
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "4",
+    "share": 0.004600168679801355
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "5",
+    "share": 0.0029645873944119557
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "6",
+    "share": 0.0021074210591583123
+  },
+  {
+    "run": "muon_scale_matched",
+    "optimizer": "Muon",
+    "label": "scale_matched",
+    "ulp_step": "\u22657",
+    "share": 0.011346046322403231
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "0",
+    "share": 0.9978122298657524
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "1",
+    "share": 0.0014331845600691544
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "2",
+    "share": 0.00029656978455977907
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "3",
+    "share": 0.00012935623201522324
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "4",
+    "share": 7.251926111575234e-05
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "5",
+    "share": 4.532453819734521e-05
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "6",
+    "share": 3.349483372783811e-05
+  },
+  {
+    "run": "sgd_native",
+    "optimizer": "SGD + momentum",
+    "label": "native",
+    "ulp_step": "\u22657",
+    "share": 0.0001773209245625638
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "0",
+    "share": 0.9884745251620081
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "1",
+    "share": 0.007541753871078158
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "2",
+    "share": 0.0015785403540680405
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "3",
+    "share": 0.0006869273697844147
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "4",
+    "share": 0.00038173459183259075
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "5",
+    "share": 0.00023582357224078714
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "6",
+    "share": 0.00016812004330850274
+  },
+  {
+    "run": "sgd_scale_matched",
+    "optimizer": "SGD + momentum",
+    "label": "scale_matched",
+    "ulp_step": "\u22657",
+    "share": 0.0009325750356794765
+  }
+]

@@ -1,0 +1,11 @@
+{
+ "AdamW, native": "#C4650D",
+ "AdamW, scale-matched (probe)": "#DFAA7A",
+ "AdamW": "#C4650D",
+ "Muon, native": "#4E728A",
+ "Muon, scale-matched (probe)": "#9EB1BF",
+ "Muon": "#4E728A",
+ "SGD + momentum, native": "#2E6E4E",
+ "SGD + momentum, scale-matched (probe)": "#8CAF9E",
+ "SGD + momentum": "#2E6E4E"
+}
