@@ -29,3 +29,6 @@ scratch/fixture_results/
 # Full 5 MB per-run records: durable copies live in the artifact store; these are
 # local working copies pulled for analysis.
 scratch/records/
+
+# One-off PNG re-renders used only to eyeball figures at reading width.
+scratch/review_*.png

@@ -113,112 +113,112 @@
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "0",
     "share": 0.9978122298657524
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "1",
     "share": 0.0014331845600691544
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "2",
     "share": 0.00029656978455977907
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "3",
     "share": 0.00012935623201522324
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "4",
     "share": 7.251926111575234e-05
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "5",
     "share": 4.532453819734521e-05
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "6",
     "share": 3.349483372783811e-05
   },
   {
     "run": "sgd_native",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "native",
     "ulp_step": "\u22657",
     "share": 0.0001773209245625638
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "0",
     "share": 0.9884745251620081
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "1",
     "share": 0.007541753871078158
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "2",
     "share": 0.0015785403540680405
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "3",
     "share": 0.0006869273697844147
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "4",
     "share": 0.00038173459183259075
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "5",
     "share": 0.00023582357224078714
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "6",
     "share": 0.00016812004330850274
   },
   {
     "run": "sgd_scale_matched",
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "label": "scale_matched",
     "ulp_step": "\u22657",
     "share": 0.0009325750356794765

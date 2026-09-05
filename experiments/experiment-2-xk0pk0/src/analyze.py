@@ -294,6 +294,73 @@ def step_histograms(runs: dict) -> dict:
     return out
 
 
+def mechanism_points(runs: dict) -> dict:
+    """Split each measured overshoot into its one-step and multi-step regimes.
+
+    Writing N for the delivered squared norm and D for the inner product, the
+    pooled overshoot N/D splits exactly over coordinates that moved exactly one
+    lattice step and those that moved two or more:
+
+        1/rho = (1 - s)/rho_1 + s/rho_2,   s = N_multi / N
+
+    ``s`` and ``rho_1`` are measured directly (``multi_step_share_of_numerator``
+    and ``single_step_only_ratio``); ``rho_2`` follows from the identity.  If
+    the optimizers differ only through ``s``, every point should fall on one
+    curve when plotted against it, whatever rule produced the update.
+    """
+    pts = []
+
+    def add(source, optimizer, multiplier, step, geom):
+        s = geom.get("multi_step_share_of_numerator")
+        r1 = geom.get("single_step_only_ratio")
+        rho = geom.get("ratio_from_realized_steps")
+        if s is None or r1 is None or rho is None:
+            return
+        if not all(map(math.isfinite, (s, r1, rho))) or rho <= 0 or r1 <= 0:
+            return
+        rest = 1.0 / rho - (1.0 - s) / r1
+        r2 = s / rest if s > 0 and rest > 0 else float("nan")
+        pts.append({
+            "source": source, "optimizer": optimizer, "multiplier": multiplier,
+            "step": step, "kind": "run" if multiplier is None else "shadow",
+            "multi_step_energy_share": s, "one_step_ratio": r1,
+            "multi_step_ratio": r2, "overshoot": rho,
+            "zero_step_fraction": geom.get("zero_step_fraction"),
+            "mean_abs_step_of_moved": geom.get("mean_abs_step_of_moved"),
+        })
+
+    for key, run in sorted(runs.items()):
+        for step, cap in sorted(run.get("full_captures", {}).items(),
+                                key=lambda kv: int(kv[0])):
+            # Same warm-up exclusion as every other table: AdamW's first steps
+            # run before its second-moment estimate has settled.
+            if int(step) <= WARMUP:
+                continue
+            geom = cap.get("geometry", {}).get("muon_covered")
+            if geom:
+                add(key, run["condition"], None, int(step), geom)
+        for row in run.get("shadow_rows", []):
+            if row["step"] <= WARMUP:
+                continue
+            for opt, scales in row.get("scales", {}).items():
+                for mult, entry in scales.items():
+                    if "geometry" in entry:
+                        add(key, opt, float(mult), row["step"], entry["geometry"])
+    return {
+        "identity": "1/rho = (1-s)/rho_1 + s/rho_2, s = multi-step share of "
+                    "delivered squared norm",
+        "n_points": len(pts),
+        "n_shadow_points": sum(p["kind"] == "shadow" for p in pts),
+        "one_step_ratio_range": [min(p["one_step_ratio"] for p in pts),
+                                 max(p["one_step_ratio"] for p in pts)] if pts else [],
+        "multi_step_ratio_range": [
+            min(p["multi_step_ratio"] for p in pts if p["multi_step_ratio"] == p["multi_step_ratio"]),
+            max(p["multi_step_ratio"] for p in pts if p["multi_step_ratio"] == p["multi_step_ratio"]),
+        ] if pts else [],
+        "points": pts,
+    }
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--inputs", default=None,
@@ -317,6 +384,15 @@ def main() -> None:
     table = condition_table(runs)
     curve = shadow_curve(runs)
     hists = step_histograms(runs)
+    mech = mechanism_points(runs)
+    (out / "mechanism.json").write_text(json.dumps(mech, indent=1))
+    print(f"\nmechanism decomposition: {mech['n_points']} points "
+          f"({mech['n_shadow_points']} from the shadow sweep)")
+    if mech["points"]:
+        print(f"  one-step regime ratio  {mech['one_step_ratio_range'][0]:.4f}"
+              f" to {mech['one_step_ratio_range'][1]:.4f}")
+        print(f"  multi-step regime ratio {mech['multi_step_ratio_range'][0]:.4f}"
+              f" to {mech['multi_step_ratio_range'][1]:.4f}")
 
     (out / "by_condition.json").write_text(json.dumps(
         {"recorded_reference": RECORDED, "warmup_dropped": WARMUP,

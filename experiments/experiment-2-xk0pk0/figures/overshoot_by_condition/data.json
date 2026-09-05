@@ -1,6 +1,6 @@
 [
   {
-    "run": "AdamW, native (lr 0.0002)",
+    "run": "AdamW, native<br>lr 0.0002",
     "condition": "adamw",
     "label": "native",
     "lr": 0.0002,
@@ -11,7 +11,7 @@
     "trains": true
   },
   {
-    "run": "Muon, native (lr 0.02)  \u2014 did not train",
+    "run": "Muon, native<br>lr 0.02, did not train",
     "condition": "muon",
     "label": "native",
     "lr": 0.02,
@@ -22,7 +22,7 @@
     "trains": false
   },
   {
-    "run": "Muon, scale-matched (probe) (lr 0.00243)",
+    "run": "Muon, scale-matched, probe<br>lr 0.00243",
     "condition": "muon",
     "label": "scale_matched",
     "lr": 0.00243,
@@ -33,7 +33,7 @@
     "trains": true
   },
   {
-    "run": "SGD + momentum, native (lr 0.01)",
+    "run": "SGD, native<br>lr 0.01",
     "condition": "sgd",
     "label": "native",
     "lr": 0.01,
@@ -44,7 +44,7 @@
     "trains": true
   },
   {
-    "run": "SGD + momentum, scale-matched (probe) (lr 0.0583)",
+    "run": "SGD, scale-matched, probe<br>lr 0.0583",
     "condition": "sgd",
     "label": "scale_matched",
     "lr": 0.0583,

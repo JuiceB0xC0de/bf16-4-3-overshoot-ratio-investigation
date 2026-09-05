@@ -7,9 +7,9 @@
   "names": [
    "AdamW, native",
    "Muon, native",
-   "Muon, scale-matched (probe)",
-   "SGD + momentum, native",
-   "SGD + momentum, scale-matched (probe)"
+   "Muon, scale-matched, probe",
+   "SGD, native",
+   "SGD, scale-matched, probe"
   ]
  },
  {
@@ -18,7 +18,7 @@
   "points": 27,
   "finite_y": 54,
   "names": [
-   "SGD + momentum",
+   "SGD",
    "Muon",
    "AdamW"
   ]
@@ -29,7 +29,7 @@
   "points": 27,
   "finite_y": 54,
   "names": [
-   "SGD + momentum",
+   "SGD",
    "Muon",
    "AdamW"
   ]
@@ -40,7 +40,7 @@
   "points": 10,
   "finite_y": 10,
   "names": [
-   "SGD + momentum \u2212 AdamW",
+   "SGD \u2212 AdamW",
    "Muon \u2212 AdamW"
   ]
  },
@@ -51,9 +51,20 @@
   "finite_y": 32,
   "names": [
    "AdamW, native",
-   "Muon, scale-matched (probe)",
-   "SGD + momentum, native",
-   "SGD + momentum, scale-matched (probe)"
+   "Muon, scale-matched, probe",
+   "SGD, native",
+   "SGD, scale-matched, probe"
+  ]
+ },
+ {
+  "figure": "overshoot_vs_multistep_share",
+  "n_series": 3,
+  "points": 100,
+  "finite_y": 200,
+  "names": [
+   "SGD",
+   "Muon",
+   "AdamW"
   ]
  },
  {
@@ -63,9 +74,9 @@
   "finite_y": 5200,
   "names": [
    "AdamW, native",
-   "Muon, scale-matched (probe)",
-   "SGD + momentum, native",
-   "SGD + momentum, scale-matched (probe)"
+   "Muon, scale-matched, probe",
+   "SGD, native",
+   "SGD, scale-matched, probe"
   ]
  }
 ]

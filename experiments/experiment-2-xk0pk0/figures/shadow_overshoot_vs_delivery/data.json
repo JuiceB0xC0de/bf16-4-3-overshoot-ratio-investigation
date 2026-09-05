@@ -1,62 +1,62 @@
 [
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.001740178988414276,
     "overshoot": 1.236830662940761,
     "lo": 1.2340534818590503,
     "hi": 1.2399621085299624
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.0034533672143320926,
     "overshoot": 1.1883671680295291,
     "lo": 1.185571790630646,
     "hi": 1.1908266684827093
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.006811734196602637,
     "overshoot": 1.1397805157263379,
     "lo": 1.1376899698086442,
     "hi": 1.142323932155098
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.013362682331552245,
     "overshoot": 1.1042803467275635,
     "lo": 1.1025690007115656,
     "hi": 1.1058373670539778
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.026029213749796942,
     "overshoot": 1.086601782218039,
     "lo": 1.0855816543307786,
     "hi": 1.0876737938460914
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.05025508876720153,
     "overshoot": 1.0791767854780492,
     "lo": 1.0778707489661195,
     "hi": 1.0801168816608433
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.0954942468657175,
     "overshoot": 1.0748697946795285,
     "lo": 1.0738002268534328,
     "hi": 1.0760371455977604
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.17549460628930547,
     "overshoot": 1.065635760940693,
     "lo": 1.064925658590316,
     "hi": 1.066764626388686
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "delivered_fraction": 0.3037417355237051,
     "overshoot": 1.049459309693415,
     "lo": 1.0489184424188047,

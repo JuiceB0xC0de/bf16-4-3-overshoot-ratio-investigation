@@ -1,6 +1,6 @@
 [
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 0.03125,
     "intent_norm": 0.013434436608622261,
     "overshoot": 1.236830662940761,
@@ -8,7 +8,7 @@
     "hi": 1.2399621085299624
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 0.0625,
     "intent_norm": 0.026868873217244522,
     "overshoot": 1.1883671680295291,
@@ -16,7 +16,7 @@
     "hi": 1.1908266684827093
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 0.125,
     "intent_norm": 0.053737746434489045,
     "overshoot": 1.1397805157263379,
@@ -24,7 +24,7 @@
     "hi": 1.142323932155098
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 0.25,
     "intent_norm": 0.10747549286897809,
     "overshoot": 1.1042803467275635,
@@ -32,7 +32,7 @@
     "hi": 1.1058373670539778
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 0.5,
     "intent_norm": 0.21495098573795618,
     "overshoot": 1.086601782218039,
@@ -40,7 +40,7 @@
     "hi": 1.0876737938460914
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 1.0,
     "intent_norm": 0.42990197147591236,
     "overshoot": 1.0791767854780492,
@@ -48,7 +48,7 @@
     "hi": 1.0801168816608433
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 2.0,
     "intent_norm": 0.8598039429518247,
     "overshoot": 1.0748697946795285,
@@ -56,7 +56,7 @@
     "hi": 1.0760371455977604
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 4.0,
     "intent_norm": 1.7196078859036494,
     "overshoot": 1.065635760940693,
@@ -64,7 +64,7 @@
     "hi": 1.066764626388686
   },
   {
-    "optimizer": "SGD + momentum",
+    "optimizer": "SGD",
     "multiplier": 8.0,
     "intent_norm": 3.439215771807299,
     "overshoot": 1.049459309693415,

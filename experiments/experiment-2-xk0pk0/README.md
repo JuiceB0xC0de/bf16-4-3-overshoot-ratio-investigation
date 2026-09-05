@@ -11,12 +11,41 @@ whether the overshoot follows the optimizer or stays put.
 **Question.** Does the pooled overshoot change when a different optimizer
 produces the intended update?
 
+**Answer.** Both framings are wrong. Muon reproduces AdamW's overshoot to
+within 0.4% at matched update magnitude, so 4/3 is not an AdamW number. SGD
+with momentum sits about 0.25 below it under the same conditions, so it is not
+a property of the bfloat16 writer alone either. The statistic reads out the
+shape of the update distribution relative to the local lattice spacing, and
+4/3 is its small-update limit for a rule that spreads that distribution
+broadly. See `results/` and the published report.
+
 ## Design
 
-Six runs of 300 optimizer steps from the same pinned checkpoint over the same
-GSM8K rows in the same order: AdamW, SGD with momentum, and Muon, each at its
-native learning rate and at a learning rate scale-matched to AdamW's median
-intended update norm.
+300-step runs from the same pinned checkpoint over the same GSM8K rows in the
+same order: AdamW, SGD with momentum, and Muon, each at its native learning
+rate and at a learning rate scale-matched to AdamW's median intended update
+norm. AdamW's scale-matched cell is the reference condition itself, so the
+planned matrix is five runs, plus a Muon learning-rate scan and a corrected
+scale-match added after the first results (below).
+
+**Shadow control.** Matching magnitude through a learning rate puts each
+optimizer on its own trajectory, so a difference between rows confounds the
+update rule with the model state the run reached. Every run therefore also
+carries a read-only shadow: on that run's own trajectory, each of the three
+rules is fed the identical post-clip gradients and its intent is written into
+the identical bfloat16 parameters, at nine magnitudes from 1/32 to 8 times the
+host's own median. The shadow matches magnitude exactly and shares the
+trajectory, and it is self-validating because the shadow's reconstruction of
+the host optimizer must reproduce the host's measured overshoot. The two
+measurements answer different questions and are reported separately.
+
+**Two corrections the first results forced.** Muon at its reference default of
+0.02 diverges on this model over 300 steps (loss 2.504 to 3.379), which a
+20-step probe could not see, so its overshoot there is measured on a diverging
+trajectory; a 300-step learning-rate scan supplies a native point that trains.
+The scale-matched multipliers, also fixed from the 20-step probe, came in at
+1.649 (Muon) and 1.537 (SGD) times AdamW's 300-step median rather than 1.0, so
+both were rerun with corrected multipliers. The original runs are kept.
 
 Muon only orthogonalizes 2-D hidden weights, so the primary comparison is
 restricted to the parameters Muon actually writes, with the whole-model number
@@ -39,7 +68,10 @@ does not, the instrument is wrong and the SGD and Muon numbers mean nothing.
 | `src/vendor_muon.py` | Muon, vendored from KellerJordan/Muon `master` |
 | `src/observer.py` | read-only per-step capture of intent, realization and lattice geometry |
 | `src/run_arm_b.py` | driver: `verify`, `probe`, `run` |
+| `src/shadow.py` | the read-only shadow optimizers, magnitude sweep, and self-check |
 | `src/analyze.py` | joins the per-condition records into plot-ready tables |
+| `src/figures.py` | builds and verifies the report figure bundles |
+| `src/preflight_report.py` | 12-stage batch diagnostic run before the first production job |
 | `src/test_geometry.py` | the torch geometry port checked against Arm A and closed forms |
 | `reference/` | the project's own observer, analyzer, extractor and published summaries, plus Arm A's writers/replay, copied for provenance |
 | `results/` | small reviewable evidence |
@@ -65,24 +97,39 @@ transmission table. See `results/data_pipeline.json`.
 apy src/test_geometry.py                      # geometry port vs Arm A, CPU, seconds
 apy scratch/emit_data_report.py               # data pipeline gate -> results/data_pipeline.json
 
-# in the project image, one GPU:
+# in the project image, one GPU per job.  --shadow is what makes the run
+# carry the confound-free control; --native turns on the reference check.
 python3 src/run_arm_b.py --mode run --condition adamw --label native \
-    --native --lr 2e-4 --steps 300 --wandb          # reference check at step 100
-python3 src/run_arm_b.py --mode probe --condition sgd  --lr 0.05  --steps 20
-python3 src/run_arm_b.py --mode probe --condition muon --lr 0.02  --steps 20
-python3 src/run_arm_b.py --mode run --condition sgd  --label scale_matched --lr <probe> --steps 300
-python3 src/run_arm_b.py --mode run --condition muon --label scale_matched --lr <probe> --steps 300
-python3 src/analyze.py --out results
+    --native --lr 2e-4     --steps 300 --shadow --wandb
+python3 src/run_arm_b.py --mode run --condition sgd  --label native \
+    --native --lr 0.01      --steps 300 --shadow --wandb
+python3 src/run_arm_b.py --mode run --condition sgd  --label scale_matched_v2 \
+             --lr 0.037930  --steps 300 --shadow --wandb
+python3 src/run_arm_b.py --mode run --condition muon --label scale_matched_v2 \
+             --lr 0.0014736 --steps 300 --shadow --wandb
+python3 src/run_arm_b.py --mode run --condition muon --label lr0.005 \
+             --lr 0.005     --steps 300 --shadow --wandb
+
+# pod-side, from the downloaded records:
+uv run --no-sync python src/analyze.py --inputs <dir of armb_*.json> --out results
+uv run --no-sync python src/figures.py --results results --root .
 ```
 
 ## Outputs
 
 | output | path | notes |
 |---|---|---|
-| per-condition step records | `$SILICO_EXPERIMENT_ARTIFACTS_DIR/armb_<condition>_<label>.json` | every step's pooled stats, geometry, and full captures |
-| plot-ready rows | same, `.rows.jsonl` | one flat row per step |
-| joined tables | `results/` | written by `src/analyze.py` |
+| per-condition step records | `artifact://juiceb0xc0de-15787e/experiments/exp_01m1rc45nwevdtjx8af5xk0pk0/armb_<condition>_<label>.json` | every step's pooled stats, lattice geometry, shadow sweep, and full captures; about 5.3 MB each |
+| plot-ready rows | same prefix, `.rows.jsonl` | one flat row per step |
+| job logs | same prefix, `log_<name>.txt` | full stdout of each production job |
+| batch preflight | same prefix, `preflight_adamw.json` | 12-stage diagnostic, all passed |
+| joined tables | `results/by_condition.json`, `shadow_curve.json`, `step_histograms.json`, `by_condition.csv` | written by `src/analyze.py` |
+| figure bundles | `figures/<name>/` | interactive render, plot-ready `data.json`, alt text; `figures/figure_checks.json` records the read-back verification |
 | data pipeline gate | `results/data_pipeline.json` | template, tokenizer, exact-match check |
+
+No external model API was used: every number comes from the pinned checkpoint
+running locally in the project image. W&B project
+`mamba3-arm-b-optimizer-overshoot` carries the per-step curves.
 
 Model: `state-spaces/mamba3-siso-187m` @ `6792c27c00f3bb41506db1066dcd1c51bb0f4b02`.
 Data: `openai/gsm8k` `main/train`, rows in order, batch 1, max 512 tokens.

@@ -7,5 +7,10 @@
  "Muon": "#4E728A",
  "SGD + momentum, native": "#2E6E4E",
  "SGD + momentum, scale-matched (probe)": "#8CAF9E",
- "SGD + momentum": "#2E6E4E"
+ "SGD + momentum": "#2E6E4E",
+ "AdamW, scale-matched, probe": "#D59051",
+ "Muon, scale-matched, probe": "#8099AB",
+ "SGD, native": "#2E6E4E",
+ "SGD, scale-matched, probe": "#699780",
+ "SGD": "#2E6E4E"
 }

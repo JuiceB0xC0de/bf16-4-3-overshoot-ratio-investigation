@@ -25,10 +25,21 @@ FOUR_THIRDS = 4.0 / 3.0
 # holds the emphasis colour in every figure it appears in.  Written once and
 # extended, never reshuffled.
 COLORS = {"adamw": EDITORIAL_8[0], "muon": EDITORIAL_8[1], "sgd": EDITORIAL_8[2]}
-PRETTY = {"adamw": "AdamW", "sgd": "SGD + momentum", "muon": "Muon"}
-LABEL = {"native": "native", "scale_matched": "scale-matched (probe)",
-         "scale_matched_v2": "scale-matched", "lr0.005": "lr 0.005",
-         "lr0.01": "lr 0.01"}
+PRETTY = {"adamw": "AdamW", "sgd": "SGD", "muon": "Muon"}
+LABEL = {"native": "native", "scale_matched": "scale-matched, probe",
+         "scale_matched_v2": "scale-matched", "lr0.005": "lr scan",
+         "lr0.01": "lr scan"}
+def _sup(k: int) -> str:
+    digits = "⁰¹²³⁴⁵⁶⁷⁸⁹"
+    body = "".join(digits[int(d)] for d in str(abs(k)))
+    return ("⁻" if k < 0 else "") + body
+
+
+# Decade ticks: these axes are dimensionless ratios, so Plotly's SI prefixes
+# ("10n", "1u") would be nonsense.
+DECADE_TICKS = {"tickvals": [10.0 ** k for k in range(-9, 5)],
+                "ticktext": [("1" if k == 0 else f"10{_sup(k)}")
+                             for k in range(-9, 5)]}
 
 
 def _lighten(hex_color: str, amount: float) -> str:
@@ -37,6 +48,52 @@ def _lighten(hex_color: str, amount: float) -> str:
     rgb = [int(h[i:i + 2], 16) for i in (0, 2, 4)]
     rgb = [int(round(c + (255 - c) * amount)) for c in rgb]
     return "#" + "".join(f"{c:02X}" for c in rgb)
+
+
+def fig_mechanism(mech: dict) -> tuple:
+    """Overshoot against the share of delivered energy in multi-step moves.
+
+    Every measured point, from all runs and all 9 shadow magnitudes.  If the
+    optimizers differed in some way beyond this one number, points of different
+    colour at the same x would sit at different heights.
+    """
+    pts = [p for p in mech["points"] if p["multi_step_ratio"] == p["multi_step_ratio"]]
+    if not pts:
+        return None, []
+    fig = go.Figure()
+    data = []
+    # One trace per optimizer, with the whole-run points carried as a larger
+    # diamond inside the same trace: splitting them into their own traces would
+    # put two identically-coloured series in the legend.
+    for opt in ("sgd", "muon", "adamw"):
+        sel = sorted((p for p in pts if p["optimizer"] == opt),
+                     key=lambda p: p["kind"])          # 'run' before 'shadow'
+        if not sel:
+            continue
+        is_run = [p["kind"] == "run" for p in sel]
+        fig.add_trace(go.Scatter(
+            x=[p["multi_step_energy_share"] for p in sel],
+            y=[p["overshoot"] for p in sel], mode="markers", name=PRETTY[opt],
+            marker=dict(color=COLORS[opt],
+                        size=[11 if r else 6 for r in is_run],
+                        symbol=["diamond" if r else "circle" for r in is_run],
+                        opacity=[1.0 if r else 0.5 for r in is_run],
+                        line=dict(width=[1.2 if r else 0 for r in is_run],
+                                  color="#FFFFFF")),
+            customdata=["whole run" if r else "shadow sweep" for r in is_run],
+            hovertemplate=(f"{PRETTY[opt]}, %{{customdata}}"
+                           "<br>multi-step energy share %{x:.4f}"
+                           "<br>overshoot %{y:.4f}<extra></extra>")))
+        data.extend({"optimizer": PRETTY[opt], "kind": p["kind"],
+                     "multi_step_energy_share": p["multi_step_energy_share"],
+                     "overshoot": p["overshoot"],
+                     "one_step_ratio": p["one_step_ratio"],
+                     "source": p["source"]} for p in sel)
+    add_reference_line(fig, y=FOUR_THIRDS, label="4/3 = 1.333")
+    fig.update_xaxes(title_text="Share of delivered squared norm in moves of 2+ ULPs")
+    fig.update_yaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
+    apply_theme(fig, height=450)
+    return fig, data
 
 
 def _rgba(hex_color: str, alpha: float) -> str:
@@ -49,7 +106,7 @@ def series_color(condition: str, label: str) -> str:
     """Native keeps the optimizer's colour; scale-matched is its lighter twin,
     so the two never rely on position alone to be told apart."""
     base = COLORS[condition]
-    return base if label == "native" else _lighten(base, 0.45)
+    return base if label == "native" else _lighten(base, 0.28)
 
 
 def series_name(condition: str, label: str) -> str:
@@ -60,7 +117,8 @@ def load(results: Path) -> tuple:
     by = json.loads((results / "by_condition.json").read_text())
     curve = json.loads((results / "shadow_curve.json").read_text())
     hist = json.loads((results / "step_histograms.json").read_text())
-    return by, curve, hist
+    mech = json.loads((results / "mechanism.json").read_text())
+    return by, curve, hist, mech
 
 
 def write_entity_colors(root: Path) -> None:
@@ -91,8 +149,10 @@ def fig_by_condition(by: dict, subset: str = "muon_covered") -> tuple:
     for r in rows:
         ci = r[f"{subset}_overshoot"]
         broke = r["trajectory"]["verdict"] != "trains"
-        name = (f"{series_name(r['condition'], r['label'])} (lr {r['lr']:g})"
-                + ("  \u2014 did not train" if broke else ""))
+        # Two lines: at 640px a single-line label with optimizer, setting and
+        # learning rate eats half the panel width.
+        name = (f"{series_name(r['condition'], r['label'])}<br>lr {r['lr']:g}"
+                + (", did not train" if broke else ""))
         key = (r["condition"], r["label"])
         groups.setdefault(key, []).append((name, ci, broke))
         data.append({"run": name, "condition": r["condition"], "label": r["label"],
@@ -154,7 +214,8 @@ def fig_shadow_curve(curve: dict) -> tuple:
                          "overshoot": p["overshoot"]["point"],
                          "lo": p["overshoot"]["lo"], "hi": p["overshoot"]["hi"]})
     add_reference_line(fig, y=FOUR_THIRDS, label="4/3 = 1.333")
-    fig.update_xaxes(title_text="Intended update norm (log)", type="log")
+    fig.update_xaxes(title_text="Intended update norm (log)", type="log",
+                     **DECADE_TICKS)
     fig.update_yaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
     apply_theme(fig, height=440)
     return fig, data
@@ -193,7 +254,10 @@ def fig_shadow_vs_delivery(curve: dict) -> tuple:
             data.append({"optimizer": PRETTY[name], "delivered_fraction": x,
                          "overshoot": y, "lo": l, "hi": h})
     add_reference_line(fig, y=FOUR_THIRDS, label="4/3 = 1.333")
-    fig.update_xaxes(title_text="Fraction of coordinates that moved (log)", type="log")
+    fig.update_xaxes(
+        title_text="Coordinates that moved (log)", type="log",
+        tickvals=[0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 0.5],
+        ticktext=["0.1%", "0.3%", "1%", "3%", "10%", "30%", "50%"])
     fig.update_yaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
     apply_theme(fig, height=440)
     return fig, data
@@ -326,7 +390,8 @@ def fig_x_distribution(hist: dict, by: dict) -> tuple:
             data.append({"run": key, "optimizer": PRETTY[cond], "label": label,
                          "x": c, "share": s})
     add_reference_line(fig, x=1.0, label="x = 1 ULP")
-    fig.update_xaxes(title_text="x = intended update ÷ lattice spacing (log)", type="log")
+    fig.update_xaxes(title_text="x = intended update ÷ lattice spacing (log)",
+                     type="log", **DECADE_TICKS)
     fig.update_yaxes(title_text="Share of coordinates per bin")
     apply_theme(fig, height=430)
     return fig, data
@@ -372,7 +437,7 @@ def main() -> None:
     args = ap.parse_args()
     root, results = Path(args.root), Path(args.results)
     bundles = str(root / "figures")
-    by, curve, hist = load(results)
+    by, curve, hist, mech = load(results)
     write_entity_colors(root)
 
     built = []
@@ -409,6 +474,16 @@ def main() -> None:
         "grouped by optimizer, on a log share axis."))
     built.append("ulp_step_histogram")
 
+    fig, data = fig_mechanism(mech)
+    if fig is not None:
+        save_figure_bundle(fig, "overshoot_vs_multistep_share", data=data,
+                           root=bundles, alt=(
+            "Scatter of pooled overshoot against the share of delivered squared "
+            "norm carried by moves of two or more lattice steps, for every run "
+            "and every shadow magnitude, with the algebraic identity drawn "
+            "through them."))
+        built.append("overshoot_vs_multistep_share")
+
     fig, data = fig_x_distribution(hist, by)
     save_figure_bundle(fig, "x_distribution", data=data, root=bundles, alt=(
         "Distribution of the intended update divided by the local lattice "
@@ -418,7 +493,7 @@ def main() -> None:
     expect = {"overshoot_by_condition": 2, "shadow_overshoot_vs_magnitude": 3,
               "shadow_overshoot_vs_delivery": 3,
               "shadow_difference_by_trajectory": 2, "ulp_step_histogram": 2,
-              "x_distribution": 2}
+              "overshoot_vs_multistep_share": 3, "x_distribution": 2}
     checks = [verify_bundle(bundles, n, expect[n]) for n in built]
     for c in checks:
         print(f"  checked {c['figure']:34s} {c['n_series']} series, "
