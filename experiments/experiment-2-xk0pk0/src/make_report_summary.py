@@ -26,6 +26,16 @@ def sig(x: float, n: int = 4) -> float:
     return round(x, -int(floor(log10(abs(x)))) + (n - 1))
 
 
+def ovr(x: float) -> float:
+    """Overshoot at five significant figures.
+
+    Every value of this statistic lives between 1.0 and 1.4, so four figures
+    would round 1.32463 and 1.32003 to 1.325 and 1.320 and hide a difference
+    the experiment is built to resolve.
+    """
+    return sig(x, 5)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", default="results")
@@ -56,8 +66,8 @@ def main() -> None:
           "overshoot to within 0.001035 against a 0.02 tolerance.",
           f"{RES}/by_condition.json",
           "rows[adamw_native].reference_check.checks.whole_overshoot",
-          {"observed": sig(ref["whole_overshoot"]["observed"], 7),
-           "recorded": sig(ref["whole_overshoot"]["recorded"], 7),
+          {"observed": ovr(ref["whole_overshoot"]["observed"]),
+           "recorded": ovr(ref["whole_overshoot"]["recorded"]),
            "abs_gap": sig(ref["whole_overshoot"]["abs_gap"], 4),
            "tol": ref["whole_overshoot"]["tol"]})
     claim("ref_zero_fraction",
@@ -88,8 +98,8 @@ def main() -> None:
               f"{name} gives pooled overshoot {sig(at[name]['point'])}.",
               f"{RES}/shadow_curve.json",
               f"sources.{curve['primary']}.at_adamw_magnitude.{name}",
-              {"point": sig(at[name]["point"]), "lo": sig(at[name]["lo"]),
-               "hi": sig(at[name]["hi"]), "n_steps": at[name]["n"]})
+              {"point": ovr(at[name]["point"]), "lo": ovr(at[name]["lo"]),
+               "hi": ovr(at[name]["hi"]), "n_steps": at[name]["n"]})
     for name in ("muon", "sgd"):
         k = f"{name}_minus_adamw"
         claim(f"shadow_paired_{name}",
@@ -97,16 +107,16 @@ def main() -> None:
               f"{name}: {sig(paired[k]['point'])}.",
               f"{RES}/shadow_curve.json",
               f"sources.{curve['primary']}.paired_difference_at_adamw_magnitude.{k}",
-              {"point": sig(paired[k]["point"]), "lo": sig(paired[k]["lo"]),
-               "hi": sig(paired[k]["hi"]),
+              {"point": ovr(paired[k]["point"]), "lo": ovr(paired[k]["lo"]),
+               "hi": ovr(paired[k]["hi"]),
                "n_steps_negative": paired[k]["n_steps_negative"],
                "n_steps": paired[k]["n_steps"]})
         claim(f"shadow_across_{name}",
               f"The {name} minus AdamW difference replicated on every host "
               f"trajectory measured.",
               f"{RES}/shadow_curve.json", f"across_trajectories.{k}",
-              {"min_point": sig(across[k]["min_point"]),
-               "max_point": sig(across[k]["max_point"]),
+              {"min_point": ovr(across[k]["min_point"]),
+               "max_point": ovr(across[k]["max_point"]),
                "n_trajectories": across[k]["n_trajectories"],
                "n_negative": across[k]["n_trajectories_negative"],
                "n_intervals_excluding_zero":
@@ -117,7 +127,7 @@ def main() -> None:
           "quarter below AdamW while Muon stays within 0.022.",
           f"{RES}/shadow_curve.json",
           f"sources.{curve['primary']}.matched_delivery.at",
-          {frac: {k: sig(v) for k, v in pt.items()} for frac, pt in md.items()})
+          {frac: {k: ovr(v) for k, v in pt.items()} for frac, pt in md.items()})
 
     small = prim["curve"]["adamw"][0]
     big = prim["curve"]["adamw"][-1]
@@ -127,12 +137,12 @@ def main() -> None:
           f"{RES}/shadow_curve.json",
           f"sources.{curve['primary']}.curve.adamw[0] and [-1]",
           {"small_multiplier": small["multiplier"],
-           "small_overshoot": sig(small["overshoot"]["point"]),
+           "small_overshoot": ovr(small["overshoot"]["point"]),
            "small_zero_fraction": sig(small["zero_fraction"]["point"]),
            "large_multiplier": big["multiplier"],
-           "large_overshoot": sig(big["overshoot"]["point"]),
+           "large_overshoot": ovr(big["overshoot"]["point"]),
            "large_zero_fraction": sig(big["zero_fraction"]["point"]),
-           "four_thirds": sig(FOUR_THIRDS)})
+           "four_thirds": ovr(FOUR_THIRDS)})
 
     for run in sorted(rows):
         r = rows[run]
@@ -140,10 +150,10 @@ def main() -> None:
               f"300-step run {run} at lr {r['lr']:g}.",
               f"{RES}/by_condition.json", f"rows[{run}]",
               {"lr": r["lr"],
-               "overshoot_muon_covered": sig(r["muon_covered_overshoot"]["point"]),
-               "lo": sig(r["muon_covered_overshoot"]["lo"]),
-               "hi": sig(r["muon_covered_overshoot"]["hi"]),
-               "overshoot_whole": sig(r["whole_overshoot"]["point"]),
+               "overshoot_muon_covered": ovr(r["muon_covered_overshoot"]["point"]),
+               "lo": ovr(r["muon_covered_overshoot"]["lo"]),
+               "hi": ovr(r["muon_covered_overshoot"]["hi"]),
+               "overshoot_whole": ovr(r["whole_overshoot"]["point"]),
                "intent_norm": sig(r["muon_covered_intent_norm"]["point"]),
                "loss_last5": sig(r["loss_last5_mean"]),
                "clip_fired_fraction": sig(r["clip_fired_fraction"]),
@@ -154,11 +164,76 @@ def main() -> None:
     ad_i = rows["adamw_native"]["muon_covered_intent_norm"]["point"]
     claim("scale_match_drift",
           "The scale-matched multipliers set from a 20-step probe overshot "
-          "AdamW's 300-step median update norm.",
+          "AdamW's 300-step median update norm; the corrected reruns land on "
+          "it.",
           f"{RES}/by_condition.json", "rows[*].muon_covered_intent_norm",
           {"adamw_median_intent_norm": sig(ad_i),
            **{run: sig(rows[run]["muon_covered_intent_norm"]["point"] / ad_i)
               for run in sorted(rows) if run != "adamw_native"}})
+
+    # The six-run comparison the plan asked for, now at a magnitude that
+    # actually matches: the two corrected runs land within 0.2% of AdamW's own
+    # median update norm, so this row is no longer a scale comparison.
+    matched = {"adamw_native": "AdamW", "muon_scale_matched_v2": "Muon",
+               "sgd_scale_matched_v2": "SGD + momentum"}
+    claim("matched_magnitude_runs",
+          "In the real 300-step runs held to AdamW's own update magnitude, "
+          "Muon lands next to AdamW and SGD with momentum lands well below "
+          "both, reproducing the shadow control's ordering on three separate "
+          "trajectories.",
+          f"{RES}/by_condition.json",
+          "rows[adamw_native|muon_scale_matched_v2|sgd_scale_matched_v2]",
+          {label: {"lr": rows[run]["lr"],
+                   "overshoot": ovr(rows[run]["muon_covered_overshoot"]["point"]),
+                   "lo": ovr(rows[run]["muon_covered_overshoot"]["lo"]),
+                   "hi": ovr(rows[run]["muon_covered_overshoot"]["hi"]),
+                   "intent_norm": sig(rows[run]["muon_covered_intent_norm"]["point"]),
+                   "intent_norm_ratio_vs_adamw":
+                       sig(rows[run]["muon_covered_intent_norm"]["point"] / ad_i),
+                   "minus_adamw": sig(
+                       rows[run]["muon_covered_overshoot"]["point"]
+                       - rows["adamw_native"]["muon_covered_overshoot"]["point"], 3)}
+           for run, label in matched.items()})
+
+    sgd_n, adamw_n = rows["sgd_native"], rows["adamw_native"]
+    claim("sgd_smaller_step_still_lower",
+          "SGD at its own learning rate takes an update about a quarter the "
+          "size of AdamW's and still sits below AdamW's overshoot, so a "
+          "smaller step does not account for the gap.",
+          f"{RES}/by_condition.json", "rows[sgd_native] vs rows[adamw_native]",
+          {"sgd_lr": sgd_n["lr"],
+           "sgd_intent_norm": sig(sgd_n["muon_covered_intent_norm"]["point"]),
+           "sgd_intent_norm_ratio_vs_adamw":
+               sig(sgd_n["muon_covered_intent_norm"]["point"] / ad_i),
+           "sgd_overshoot": ovr(sgd_n["muon_covered_overshoot"]["point"]),
+           "adamw_overshoot": ovr(adamw_n["muon_covered_overshoot"]["point"])})
+
+    scan = [rows[r] for r in ("muon_scale_matched_v2", "muon_scale_matched",
+                              "muon_lr0.005", "muon_lr0.01", "muon_native")]
+    claim("muon_lr_scan",
+          "Sweeping Muon's learning rate over a 14-fold range walks its "
+          "overshoot down the same magnitude curve the shadow control traces, "
+          "in real runs on five separate trajectories.",
+          f"{RES}/by_condition.json", "rows[muon_*]",
+          [{"lr": r["lr"],
+            "intent_norm": sig(r["muon_covered_intent_norm"]["point"]),
+            "overshoot": ovr(r["muon_covered_overshoot"]["point"]),
+            "trajectory_verdict": r["trajectory"]["verdict"]} for r in scan])
+
+    gaps = {run: sig(r["muon_covered_overshoot"]["point"]
+                     - r["geom_muon_covered_ratio_predicted_from_x"]["point"], 3)
+            for run, r in sorted(rows.items())}
+    claim("predicted_from_x",
+          "Predicting each run's overshoot from its measured distribution of "
+          "x = |intended update| / lattice spacing alone, under "
+          "round-to-nearest, reproduces the measured value; nothing "
+          "optimizer-specific is left over.",
+          f"{RES}/by_condition.json",
+          "rows[*].muon_covered_overshoot minus "
+          "rows[*].geom_muon_covered_ratio_predicted_from_x",
+          {"per_run_signed_gap": gaps,
+           "max_abs_gap": sig(max(abs(v) for v in gaps.values()), 3),
+           "median_abs_gap": sig(sorted(abs(v) for v in gaps.values())[len(gaps) // 2], 3)})
 
     for run in sorted(hist):
         h = hist[run]
@@ -170,8 +245,8 @@ def main() -> None:
                "x_median": sig(h["x_quantiles_from_hist"]["0.5"]),
                "x_p05": sig(h["x_quantiles_from_hist"]["0.05"]),
                "x_p95": sig(h["x_quantiles_from_hist"]["0.95"]),
-               "ratio_from_realized_steps": sig(h["ratio_from_realized_steps"]),
-               "ratio_predicted_from_x": sig(h["ratio_predicted_from_x"])})
+               "ratio_from_realized_steps": ovr(h["ratio_from_realized_steps"]),
+               "ratio_predicted_from_x": ovr(h["ratio_predicted_from_x"])})
 
     claim("mechanism_regimes",
           "Across every run and every shadow magnitude, the one-step regime "
@@ -180,8 +255,8 @@ def main() -> None:
           f"{RES}/mechanism.json", "one_step_ratio_range, multi_step_ratio_range",
           {"n_points": mech["n_points"],
            "n_shadow_points": mech["n_shadow_points"],
-           "one_step_ratio_range": [sig(v) for v in mech["one_step_ratio_range"]],
-           "multi_step_ratio_range": [sig(v) for v in mech["multi_step_ratio_range"]]})
+           "one_step_ratio_range": [ovr(v) for v in mech["one_step_ratio_range"]],
+           "multi_step_ratio_range": [ovr(v) for v in mech["multi_step_ratio_range"]]})
 
     roster = None
     for p in Path("scratch/records").glob("armb_adamw_native.json"):
@@ -203,11 +278,13 @@ def main() -> None:
             f"{abs(sig(paired['muon_minus_adamw']['point'])):.4f} at exactly matched "
             "update magnitude, so the number is not an AdamW pathology; SGD with "
             f"momentum sits {abs(sig(paired['sgd_minus_adamw']['point'])):.4f} below "
-            "it under identical conditions, so it is not a property of the "
-            "bfloat16 writer alone either. The statistic reads out how the "
-            "delivered update splits between coordinates that move one lattice "
-            "step and coordinates that move several, and 4/3 is its small-update "
-            "limit rather than a constant."),
+            "it under identical gradients and identical parameters, so it is not "
+            "a property of the bfloat16 writer alone either. What the statistic "
+            "reads out is where the update sits relative to the local lattice "
+            "spacing: predicting it from that distribution alone, under "
+            "round-to-nearest, reproduces every run, and 4/3 is what that "
+            "prediction returns in the small-update limit rather than a "
+            "constant of the writer."),
         "assessment": "signal",
         "decision_rule": (
             "Pre-registered: the AdamW replay had to reproduce the recorded "
@@ -248,13 +325,21 @@ def main() -> None:
             "between those rows confounds the update rule with the model state "
             "reached. The shadow control exists because of this and is the "
             "primary evidence. The two claims are reported separately.",
-            "The scale-matched learning rates were fixed from a 20-step probe and "
-            "landed at 1.649 (Muon) and 1.537 (SGD) times AdamW's 300-step median "
-            "update norm rather than 1.0. Corrected reruns are reported alongside "
-            "the originals.",
-            "Muon at its reference default of 0.02 diverges on this model over "
-            "300 steps, so that row is a broken-training condition and is "
-            "labelled as such rather than read as an operating point.",
+            "The scale-matched learning rates were first fixed from a 20-step "
+            "probe and landed at 1.649 (Muon) and 1.537 (SGD) times AdamW's "
+            "300-step median update norm rather than 1.0. Corrected reruns at "
+            "0.999 and 0.998 are the ones the matched-magnitude claim uses; the "
+            "probe runs are kept in every table as extra points on the "
+            "magnitude curve.",
+            "Muon at its reference default of 0.02, and at 0.01, does not reduce "
+            "loss on this model over 300 steps, so those two rows are "
+            "broken-training conditions and are labelled as such rather than "
+            "read as operating points. The largest Muon learning rate scanned "
+            "that trains is 0.005.",
+            "The magnitude sweep inside a run is a learning-rate sweep, so its "
+            "points also sit on separate trajectories. It agrees with the "
+            "shadow sweep, which does not have that confound, rather than "
+            "standing on its own.",
             "One model, one size, one dataset, one 300-step window. Nothing here "
             "establishes that the same numbers hold at another scale or on "
             "another architecture.",

@@ -12,12 +12,22 @@ whether the overshoot follows the optimizer or stays put.
 produces the intended update?
 
 **Answer.** Both framings are wrong. Muon reproduces AdamW's overshoot to
-within 0.4% at matched update magnitude, so 4/3 is not an AdamW number. SGD
-with momentum sits about 0.25 below it under the same conditions, so it is not
-a property of the bfloat16 writer alone either. The statistic reads out the
-shape of the update distribution relative to the local lattice spacing, and
-4/3 is its small-update limit for a rule that spreads that distribution
-broadly. See `results/` and the published report.
+within 0.0031 at matched update magnitude on a shared trajectory (1.3208 vs
+1.3241), so 4/3 is not an AdamW number. SGD with momentum sits 0.2452 below it
+under identical gradients and identical bfloat16 parameters (1.0792), so it is
+not a property of the bfloat16 writer alone either. The real runs agree:
+held to AdamW's own update magnitude to within 0.2%, AdamW reaches 1.3246,
+Muon 1.3200 and SGD 1.1702.
+
+What the statistic reads out is where the update sits relative to the local
+lattice spacing. Writing a bfloat16 parameter rounds to nearest, so a
+coordinate whose intended update is `x` lattice spacings moves `round(x)`
+spacings; predicting each run's overshoot from its measured distribution of
+`x` alone reproduces the measurement (median gap 0.0013, worst 0.017 over nine
+runs), leaving nothing optimizer-specific. 4/3 is exactly what that prediction
+returns when `x` is uniform on the unit interval, which is the small-update
+limit rather than a constant of the writer. See `results/` and the published
+report.
 
 ## Design
 
@@ -42,10 +52,14 @@ measurements answer different questions and are reported separately.
 **Two corrections the first results forced.** Muon at its reference default of
 0.02 diverges on this model over 300 steps (loss 2.504 to 3.379), which a
 20-step probe could not see, so its overshoot there is measured on a diverging
-trajectory; a 300-step learning-rate scan supplies a native point that trains.
+trajectory; a 300-step learning-rate scan found that 0.01 does not train either
+and 0.005 does, which is the largest Muon rate here that reduces loss.
 The scale-matched multipliers, also fixed from the 20-step probe, came in at
 1.649 (Muon) and 1.537 (SGD) times AdamW's 300-step median rather than 1.0, so
-both were rerun with corrected multipliers. The original runs are kept.
+both were rerun with corrected multipliers and landed at 0.9989 and 0.9983.
+The original runs are kept as extra points on the magnitude curve, which turns
+the nine runs into a learning-rate ladder spanning a 48-fold range of update
+norm.
 
 Muon only orthogonalizes 2-D hidden weights, so the primary comparison is
 restricted to the parameters Muon actually writes, with the whole-model number
@@ -123,7 +137,8 @@ uv run --no-sync python src/figures.py --results results --root .
 | plot-ready rows | same prefix, `.rows.jsonl` | one flat row per step |
 | job logs | same prefix, `log_<name>.txt` | full stdout of each production job |
 | batch preflight | same prefix, `preflight_adamw.json` | 12-stage diagnostic, all passed |
-| joined tables | `results/by_condition.json`, `shadow_curve.json`, `step_histograms.json`, `by_condition.csv` | written by `src/analyze.py` |
+| joined tables | `results/by_condition.json`, `shadow_curve.json`, `step_histograms.json`, `mechanism.json`, `by_condition.csv` | written by `src/analyze.py` |
+| report contract | `report_summary.json`, `claims_manifest.json` | written by `src/make_report_summary.py`; every published number traces to a file and key |
 | figure bundles | `figures/<name>/` | interactive render, plot-ready `data.json`, alt text; `figures/figure_checks.json` records the read-back verification |
 | data pipeline gate | `results/data_pipeline.json` | template, tokenizer, exact-match check |
 

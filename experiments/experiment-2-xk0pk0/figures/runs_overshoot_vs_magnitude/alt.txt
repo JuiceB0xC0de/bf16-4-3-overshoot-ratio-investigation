@@ -1,0 +1,1 @@
+Pooled overshoot against intended update norm on a log x axis, one point per training run, coloured by update rule, against a reference line at 4/3.

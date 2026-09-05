@@ -10,6 +10,24 @@
   },
   {
     "comparison": "SGD \u2212 AdamW",
+    "host_trajectory": "Muon, lr scan",
+    "difference": -0.21146971633286826,
+    "lo": -0.2123916230250804,
+    "hi": -0.2104897792524385,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "SGD \u2212 AdamW",
+    "host_trajectory": "Muon, lr scan",
+    "difference": -0.14442096366415602,
+    "lo": -0.14479991091408517,
+    "hi": -0.14370071704184742,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "SGD \u2212 AdamW",
     "host_trajectory": "Muon, native",
     "difference": -0.06653489657944323,
     "lo": -0.06746409599660153,
@@ -23,6 +41,15 @@
     "difference": -0.24030180997167228,
     "lo": -0.2418352110870025,
     "hi": -0.2391702200411252,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
+    "comparison": "SGD \u2212 AdamW",
+    "host_trajectory": "Muon, scale-matched",
+    "difference": -0.24813283771373307,
+    "lo": -0.24914754573992415,
+    "hi": -0.2466386535134637,
     "n_steps": 295,
     "n_steps_negative": 295
   },
@@ -45,6 +72,15 @@
     "n_steps_negative": 295
   },
   {
+    "comparison": "SGD \u2212 AdamW",
+    "host_trajectory": "SGD, scale-matched",
+    "difference": -0.22844140859878292,
+    "lo": -0.22971547340493403,
+    "hi": -0.22746325303466608,
+    "n_steps": 295,
+    "n_steps_negative": 295
+  },
+  {
     "comparison": "Muon \u2212 AdamW",
     "host_trajectory": "AdamW, native",
     "difference": -0.003125612111904319,
@@ -52,6 +88,24 @@
     "hi": -0.0025514654026807305,
     "n_steps": 295,
     "n_steps_negative": 251
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "Muon, lr scan",
+    "difference": -0.013936803559524202,
+    "lo": -0.014382283376929372,
+    "hi": -0.013294210038834242,
+    "n_steps": 295,
+    "n_steps_negative": 294
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "Muon, lr scan",
+    "difference": -0.013338426163821193,
+    "lo": -0.014708522612421282,
+    "hi": -0.012170264426053956,
+    "n_steps": 295,
+    "n_steps_negative": 295
   },
   {
     "comparison": "Muon \u2212 AdamW",
@@ -73,6 +127,15 @@
   },
   {
     "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "Muon, scale-matched",
+    "difference": -0.006935274830650817,
+    "lo": -0.007004814092095746,
+    "hi": -0.006804580080861822,
+    "n_steps": 295,
+    "n_steps_negative": 285
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
     "host_trajectory": "SGD, native",
     "difference": -0.0014976070192564972,
     "lo": -0.002131377871076978,
@@ -88,5 +151,14 @@
     "hi": -0.010559181971523168,
     "n_steps": 295,
     "n_steps_negative": 295
+  },
+  {
+    "comparison": "Muon \u2212 AdamW",
+    "host_trajectory": "SGD, scale-matched",
+    "difference": -0.0058452961710808715,
+    "lo": -0.006173147756025177,
+    "hi": -0.00537095447740521,
+    "n_steps": 295,
+    "n_steps_negative": 278
   }
 ]

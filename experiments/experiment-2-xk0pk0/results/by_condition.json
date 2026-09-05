@@ -261,6 +261,430 @@
    }
   },
   {
+   "run": "muon_lr0.005",
+   "condition": "muon",
+   "label": "lr0.005",
+   "lr": 0.005,
+   "n_steps": 300,
+   "n_steps_used": 295,
+   "warmup_dropped": 5,
+   "config": {
+    "condition": "muon",
+    "lr": 0.005,
+    "weight_decay": 0.01,
+    "decay_semantics": "decoupled (all conditions)",
+    "momentum": 0.95,
+    "ns_steps": 5,
+    "nesterov": true,
+    "fallback": "adamw",
+    "fallback_lr": 0.0002
+   },
+   "loss_first": 3.4349277019500732,
+   "loss_last5_mean": 2.18505654335022,
+   "grad_norm_preclip_median": 4.737262725830078,
+   "grad_norm_preclip_max": 14.64633846282959,
+   "clip_fired_fraction": 1,
+   "clip_fired_every_step": true,
+   "clip_fired_first_100": 100,
+   "trajectory": {
+    "loss_first20_mean": 2.352859288454056,
+    "loss_last20_mean": 1.9704389035701753,
+    "loss_drop": 0.3824203848838805,
+    "loss_min": 1.188417673110962,
+    "loss_max": 3.574298620223999,
+    "all_losses_finite": true,
+    "grad_norm_preclip_median": 4.8158485889434814,
+    "threshold_loss_drop": 0.1,
+    "verdict": "trains"
+   },
+   "whole_overshoot": {
+    "point": 1.2576993601645463,
+    "lo": 1.25737454630824,
+    "hi": 1.25817589248044,
+    "n": 295
+   },
+   "whole_zero_fraction": {
+    "point": 0.8529779458987335,
+    "lo": 0.852389071210214,
+    "hi": 0.8535747735076767,
+    "n": 295
+   },
+   "whole_intent_norm": {
+    "point": 1.568554294686801,
+    "lo": 1.5627214491220547,
+    "hi": 1.5773091705556381,
+    "n": 295
+   },
+   "whole_delivery": {
+    "point": 0.8672533875264081,
+    "lo": 0.864394085715794,
+    "hi": 0.8695244194719856,
+    "n": 295
+   },
+   "bf16_recorded_overshoot": {
+    "point": 1.257699541606685,
+    "lo": 1.2573747497909185,
+    "hi": 1.2581761179707993,
+    "n": 295
+   },
+   "bf16_recorded_zero_fraction": {
+    "point": 0.8529805753761925,
+    "lo": 0.8523916988723473,
+    "hi": 0.8535774048249778,
+    "n": 295
+   },
+   "bf16_recorded_intent_norm": {
+    "point": 1.5685538643077739,
+    "lo": 1.5627210642351685,
+    "hi": 1.5773088700440419,
+    "n": 295
+   },
+   "bf16_recorded_delivery": {
+    "point": 0.8672532985664281,
+    "lo": 0.8643940304858679,
+    "hi": 0.8695243583244826,
+    "n": 295
+   },
+   "bf16_true_overshoot": {
+    "point": 1.2577218307373825,
+    "lo": 1.2574013249381506,
+    "hi": 1.2582018628646923,
+    "n": 295
+   },
+   "bf16_true_zero_fraction": {
+    "point": 0.8533171645997552,
+    "lo": 0.8527280395797098,
+    "hi": 0.8539142135799372,
+    "n": 295
+   },
+   "bf16_true_intent_norm": {
+    "point": 1.568510979502789,
+    "lo": 1.5626807995976801,
+    "hi": 1.5772720296798435,
+    "n": 295
+   },
+   "bf16_true_delivery": {
+    "point": 0.8672432998205721,
+    "lo": 0.8643866999165044,
+    "hi": 0.8695178309337296,
+    "n": 295
+   },
+   "muon_covered_overshoot": {
+    "point": 1.2556043491851596,
+    "lo": 1.255515380075423,
+    "hi": 1.2557115236207432,
+    "n": 295
+   },
+   "muon_covered_zero_fraction": {
+    "point": 0.7311171515123167,
+    "lo": 0.7308037663240857,
+    "hi": 0.731385574758656,
+    "n": 295
+   },
+   "muon_covered_intent_norm": {
+    "point": 1.4558858181546985,
+    "lo": 1.4553660972881794,
+    "hi": 1.4563575692503565,
+    "n": 295
+   },
+   "muon_covered_delivery": {
+    "point": 0.9228395008935152,
+    "lo": 0.9226962617274924,
+    "hi": 0.9230085229584606,
+    "n": 295
+   },
+   "geom_bf16_true_x_median": {
+    "point": 0.06996210925596755,
+    "lo": 0.06885660974496591,
+    "hi": 0.07104655464672746,
+    "n": 295
+   },
+   "geom_bf16_true_zero_step_fraction": {
+    "point": 0.8536130656165578,
+    "lo": 0.8530370097767105,
+    "hi": 0.8542357122003972,
+    "n": 295
+   },
+   "geom_bf16_true_abs_step_ge_2_share_of_moved": {
+    "point": 0.36558069696333534,
+    "lo": 0.3654580956898901,
+    "hi": 0.36573283179741767,
+    "n": 295
+   },
+   "geom_bf16_true_mean_abs_step_of_moved": {
+    "point": 2049.4785050324153,
+    "lo": 1927.7623360190369,
+    "hi": 2141.6051639924867,
+    "n": 295
+   },
+   "geom_bf16_true_ratio_predicted_from_x": {
+    "point": 1.2577584683382785,
+    "lo": 1.257405743940708,
+    "hi": 1.2582192884823105,
+    "n": 295
+   },
+   "geom_bf16_true_decay_x_max": {
+    "point": 0.012749999761581421,
+    "lo": 0.012749999761581421,
+    "hi": 0.012749999761581421,
+    "n": 295
+   },
+   "geom_muon_covered_x_median": {
+    "point": 0.21049596715282018,
+    "lo": 0.21018697673361533,
+    "hi": 0.21076569697645384,
+    "n": 295
+   },
+   "geom_muon_covered_zero_step_fraction": {
+    "point": 0.7316669154983814,
+    "lo": 0.7313883508866205,
+    "hi": 0.7319248801075315,
+    "n": 295
+   },
+   "geom_muon_covered_abs_step_ge_2_share_of_moved": {
+    "point": 0.3688395049527163,
+    "lo": 0.3687884730128553,
+    "hi": 0.36890167144349456,
+    "n": 295
+   },
+   "geom_muon_covered_mean_abs_step_of_moved": {
+    "point": 2391.5991847974806,
+    "lo": 2203.5455476748116,
+    "hi": 2477.6048009752567,
+    "n": 295
+   },
+   "geom_muon_covered_ratio_predicted_from_x": {
+    "point": 1.2556452464934407,
+    "lo": 1.255542095100309,
+    "hi": 1.2557491157623293,
+    "n": 295
+   },
+   "geom_muon_covered_decay_x_max": {
+    "point": 0.012749999761581421,
+    "lo": 0.012749999761581421,
+    "hi": 0.012749999761581421,
+    "n": 295
+   },
+   "shadow_self_check": {
+    "n_steps": 300,
+    "max_abs_gap": 0.1442512337013424,
+    "median_abs_gap": 0.01691077112250805,
+    "all_ok": false
+   }
+  },
+  {
+   "run": "muon_lr0.01",
+   "condition": "muon",
+   "label": "lr0.01",
+   "lr": 0.01,
+   "n_steps": 300,
+   "n_steps_used": 295,
+   "warmup_dropped": 5,
+   "config": {
+    "condition": "muon",
+    "lr": 0.01,
+    "weight_decay": 0.01,
+    "decay_semantics": "decoupled (all conditions)",
+    "momentum": 0.95,
+    "ns_steps": 5,
+    "nesterov": true,
+    "fallback": "adamw",
+    "fallback_lr": 0.0002
+   },
+   "loss_first": 3.4349277019500732,
+   "loss_last5_mean": 2.765466403961182,
+   "grad_norm_preclip_median": 5.493796348571777,
+   "grad_norm_preclip_max": 16.196592330932617,
+   "clip_fired_fraction": 1,
+   "clip_fired_every_step": true,
+   "clip_fired_first_100": 100,
+   "trajectory": {
+    "loss_first20_mean": 2.31344113945961,
+    "loss_last20_mean": 2.6125676035881042,
+    "loss_drop": -0.2991264641284941,
+    "loss_min": 1.3995438814163208,
+    "loss_max": 4.135262966156006,
+    "all_losses_finite": true,
+    "grad_norm_preclip_median": 5.506483554840088,
+    "threshold_loss_drop": 0.1,
+    "verdict": "does_not_train"
+   },
+   "whole_overshoot": {
+    "point": 1.1759031973886438,
+    "lo": 1.1749239501813191,
+    "hi": 1.176173625259409,
+    "n": 295
+   },
+   "whole_zero_fraction": {
+    "point": 0.7719332714653925,
+    "lo": 0.7709342647776608,
+    "hi": 0.7728534661032188,
+    "n": 295
+   },
+   "whole_intent_norm": {
+    "point": 2.944626006237992,
+    "lo": 2.9378624260338047,
+    "hi": 2.9489913724980217,
+    "n": 295
+   },
+   "whole_delivery": {
+    "point": 1.0059543746983923,
+    "lo": 1.0054056865711682,
+    "hi": 1.0066821112069848,
+    "n": 295
+   },
+   "bf16_recorded_overshoot": {
+    "point": 1.1759032225495043,
+    "lo": 1.174923967752919,
+    "hi": 1.1761736522558746,
+    "n": 295
+   },
+   "bf16_recorded_zero_fraction": {
+    "point": 0.7719356511062108,
+    "lo": 0.7709366413388383,
+    "hi": 0.7728558485807236,
+    "n": 295
+   },
+   "bf16_recorded_intent_norm": {
+    "point": 2.944625800884261,
+    "lo": 2.9378621994719696,
+    "hi": 2.948991224781734,
+    "n": 295
+   },
+   "bf16_recorded_delivery": {
+    "point": 1.0059543752227063,
+    "lo": 1.0054056871721673,
+    "hi": 1.0066821120791183,
+    "n": 295
+   },
+   "bf16_true_overshoot": {
+    "point": 1.1759060413121016,
+    "lo": 1.1749259664660314,
+    "hi": 1.1761763940114522,
+    "n": 295
+   },
+   "bf16_true_zero_fraction": {
+    "point": 0.7722402378096084,
+    "lo": 0.7712408176293293,
+    "hi": 0.7731607449841761,
+    "n": 295
+   },
+   "bf16_true_intent_norm": {
+    "point": 2.9446027024094987,
+    "lo": 2.9378356670577572,
+    "hi": 2.9489739929805596,
+    "n": 295
+   },
+   "bf16_true_delivery": {
+    "point": 1.0059544371204232,
+    "lo": 1.0054057569442498,
+    "hi": 1.0066822251548373,
+    "n": 295
+   },
+   "muon_covered_overshoot": {
+    "point": 1.174399346229614,
+    "lo": 1.1736013869616346,
+    "hi": 1.1749327622945476,
+    "n": 295
+   },
+   "muon_covered_zero_fraction": {
+    "point": 0.5593149427206616,
+    "lo": 0.5578927266988362,
+    "hi": 0.5598798111090806,
+    "n": 295
+   },
+   "muon_covered_intent_norm": {
+    "point": 2.8789568593615176,
+    "lo": 2.8756939604802123,
+    "hi": 2.882247959570625,
+    "n": 295
+   },
+   "muon_covered_delivery": {
+    "point": 1.025584875477217,
+    "lo": 1.0253976130712485,
+    "hi": 1.0257007810391,
+    "n": 295
+   },
+   "geom_bf16_true_x_median": {
+    "point": 0.09541795839027775,
+    "lo": 0.09396627431179512,
+    "hi": 0.09672562293125632,
+    "n": 295
+   },
+   "geom_bf16_true_zero_step_fraction": {
+    "point": 0.772672521959221,
+    "lo": 0.771645689160091,
+    "hi": 0.7735849284907571,
+    "n": 295
+   },
+   "geom_bf16_true_abs_step_ge_2_share_of_moved": {
+    "point": 0.4129578164804857,
+    "lo": 0.41258795768143774,
+    "hi": 0.41333195419786783,
+    "n": 295
+   },
+   "geom_bf16_true_mean_abs_step_of_moved": {
+    "point": 2458.6120830945983,
+    "lo": 2380.821090069384,
+    "hi": 2598.13166086424,
+    "n": 295
+   },
+   "geom_bf16_true_ratio_predicted_from_x": {
+    "point": 1.174623366884506,
+    "lo": 1.1737898717606257,
+    "hi": 1.1748869340536345,
+    "n": 295
+   },
+   "geom_bf16_true_decay_x_max": {
+    "point": 0.025499999523162842,
+    "lo": 0.025499999523162842,
+    "hi": 0.025499999523162842,
+    "n": 295
+   },
+   "geom_muon_covered_x_median": {
+    "point": 0.4055844340852917,
+    "lo": 0.4045275441599233,
+    "hi": 0.40759207745701825,
+    "n": 295
+   },
+   "geom_muon_covered_zero_step_fraction": {
+    "point": 0.560178250530841,
+    "lo": 0.5587059508943075,
+    "hi": 0.5607128874522823,
+    "n": 295
+   },
+   "geom_muon_covered_abs_step_ge_2_share_of_moved": {
+    "point": 0.41911983582415013,
+    "lo": 0.4186666549276975,
+    "hi": 0.4194849974153844,
+    "n": 295
+   },
+   "geom_muon_covered_mean_abs_step_of_moved": {
+    "point": 2705.221933168628,
+    "lo": 2619.236280248327,
+    "hi": 2830.6745046477063,
+    "n": 295
+   },
+   "geom_muon_covered_ratio_predicted_from_x": {
+    "point": 1.1730772788209076,
+    "lo": 1.1726107403313797,
+    "hi": 1.1736217634296753,
+    "n": 295
+   },
+   "geom_muon_covered_decay_x_max": {
+    "point": 0.025499999523162842,
+    "lo": 0.025499999523162842,
+    "hi": 0.025499999523162842,
+    "n": 295
+   },
+   "shadow_self_check": {
+    "n_steps": 300,
+    "max_abs_gap": 0.13780502855569554,
+    "median_abs_gap": 0.009716861611574146,
+    "all_ok": false
+   }
+  },
+  {
    "run": "muon_native",
    "condition": "muon",
    "label": "native",
@@ -685,6 +1109,218 @@
    }
   },
   {
+   "run": "muon_scale_matched_v2",
+   "condition": "muon",
+   "label": "scale_matched_v2",
+   "lr": 0.0014736,
+   "n_steps": 300,
+   "n_steps_used": 295,
+   "warmup_dropped": 5,
+   "config": {
+    "condition": "muon",
+    "lr": 0.0014736,
+    "weight_decay": 0.01,
+    "decay_semantics": "decoupled (all conditions)",
+    "momentum": 0.95,
+    "ns_steps": 5,
+    "nesterov": true,
+    "fallback": "adamw",
+    "fallback_lr": 0.0002
+   },
+   "loss_first": 3.4349277019500732,
+   "loss_last5_mean": 1.806880235671997,
+   "grad_norm_preclip_median": 4.659866809844971,
+   "grad_norm_preclip_max": 9.875274658203125,
+   "clip_fired_fraction": 1,
+   "clip_fired_every_step": true,
+   "clip_fired_first_100": 100,
+   "trajectory": {
+    "loss_first20_mean": 2.742871654033661,
+    "loss_last20_mean": 1.7038750886917113,
+    "loss_drop": 1.0389965653419497,
+    "loss_min": 1.0183517932891846,
+    "loss_max": 3.6511826515197754,
+    "all_losses_finite": true,
+    "grad_norm_preclip_median": 4.67672324180603,
+    "threshold_loss_drop": 0.1,
+    "verdict": "trains"
+   },
+   "whole_overshoot": {
+    "point": 1.3224314892520028,
+    "lo": 1.321926117973909,
+    "hi": 1.3236492272686553,
+    "n": 295
+   },
+   "whole_zero_fraction": {
+    "point": 0.9465467252806535,
+    "lo": 0.9459676499173667,
+    "hi": 0.9470490758342539,
+    "n": 295
+   },
+   "whole_intent_norm": {
+    "point": 0.6329718294088685,
+    "lo": 0.6243845232716562,
+    "hi": 0.6433691680450521,
+    "n": 295
+   },
+   "whole_delivery": {
+    "point": 0.4858627370335832,
+    "lo": 0.4839127427201196,
+    "hi": 0.4872897261221886,
+    "n": 295
+   },
+   "bf16_recorded_overshoot": {
+    "point": 1.3224381431763794,
+    "lo": 1.3219452628015933,
+    "hi": 1.3236555429307886,
+    "n": 295
+   },
+   "bf16_recorded_zero_fraction": {
+    "point": 0.9465496378509315,
+    "lo": 0.9459705607025274,
+    "hi": 0.9470519899531292,
+    "n": 295
+   },
+   "bf16_recorded_intent_norm": {
+    "point": 0.6329696723285462,
+    "lo": 0.6243788364259688,
+    "hi": 0.6433680980407448,
+    "n": 295
+   },
+   "bf16_recorded_delivery": {
+    "point": 0.4858605502167283,
+    "lo": 0.48390784279766724,
+    "hi": 0.4872881938181812,
+    "n": 295
+   },
+   "bf16_true_overshoot": {
+    "point": 1.3233817570149895,
+    "lo": 1.3229097786656565,
+    "hi": 1.3243279717841803,
+    "n": 295
+   },
+   "bf16_true_zero_fraction": {
+    "point": 0.9469232001645442,
+    "lo": 0.9463438141198288,
+    "hi": 0.9474257398580164,
+    "n": 295
+   },
+   "bf16_true_intent_norm": {
+    "point": 0.6327386740139379,
+    "lo": 0.6238415296631322,
+    "hi": 0.6432411971747758,
+    "n": 295
+   },
+   "bf16_true_delivery": {
+    "point": 0.4855713074853824,
+    "lo": 0.4835637693085807,
+    "hi": 0.4869685219008996,
+    "n": 295
+   },
+   "muon_covered_overshoot": {
+    "point": 1.3200252453188115,
+    "lo": 1.3199711200346218,
+    "hi": 1.3200871849759719,
+    "n": 295
+   },
+   "muon_covered_zero_fraction": {
+    "point": 0.9126753085150666,
+    "lo": 0.9126236951971943,
+    "hi": 0.9127559295373852,
+    "n": 295
+   },
+   "muon_covered_intent_norm": {
+    "point": 0.4294376270690731,
+    "lo": 0.4292653585207735,
+    "hi": 0.4296320190628625,
+    "n": 295
+   },
+   "muon_covered_delivery": {
+    "point": 0.5892910935189437,
+    "lo": 0.589225764790753,
+    "hi": 0.5893782209272721,
+    "n": 295
+   },
+   "geom_bf16_true_x_median": {
+    "point": 0.028989074423568902,
+    "lo": 0.028561841485193126,
+    "hi": 0.03027400819861182,
+    "n": 295
+   },
+   "geom_bf16_true_zero_step_fraction": {
+    "point": 0.9470200491611054,
+    "lo": 0.9464633106511046,
+    "hi": 0.9475346086454602,
+    "n": 295
+   },
+   "geom_bf16_true_abs_step_ge_2_share_of_moved": {
+    "point": 0.3425725082235707,
+    "lo": 0.34215104014347186,
+    "hi": 0.34290068906111,
+    "n": 295
+   },
+   "geom_bf16_true_mean_abs_step_of_moved": {
+    "point": 9.521610594551076,
+    "lo": 9.201522436148803,
+    "hi": 9.825654939063865,
+    "n": 295
+   },
+   "geom_bf16_true_ratio_predicted_from_x": {
+    "point": 1.3237274877557708,
+    "lo": 1.3231274219099491,
+    "hi": 1.3244967034226427,
+    "n": 295
+   },
+   "geom_bf16_true_decay_x_max": {
+    "point": 0.003757679834961891,
+    "lo": 0.003757679834961891,
+    "hi": 0.003757679834961891,
+    "n": 295
+   },
+   "geom_muon_covered_x_median": {
+    "point": 0.06314634549915739,
+    "lo": 0.06308714703316518,
+    "hi": 0.06320366550189849,
+    "n": 295
+   },
+   "geom_muon_covered_zero_step_fraction": {
+    "point": 0.9128936254844287,
+    "lo": 0.9128378083156387,
+    "hi": 0.9129717649882809,
+    "n": 295
+   },
+   "geom_muon_covered_abs_step_ge_2_share_of_moved": {
+    "point": 0.342500810188022,
+    "lo": 0.3423214165619318,
+    "hi": 0.34265412032013154,
+    "n": 295
+   },
+   "geom_muon_covered_mean_abs_step_of_moved": {
+    "point": 9.544232443582809,
+    "lo": 9.290326985370205,
+    "hi": 9.732744544145055,
+    "n": 295
+   },
+   "geom_muon_covered_ratio_predicted_from_x": {
+    "point": 1.3203644798815506,
+    "lo": 1.3203190989732616,
+    "hi": 1.320413294074316,
+    "n": 295
+   },
+   "geom_muon_covered_decay_x_max": {
+    "point": 0.003757679834961891,
+    "lo": 0.003757679834961891,
+    "hi": 0.003757679834961891,
+    "n": 295
+   },
+   "shadow_self_check": {
+    "n_steps": 300,
+    "max_abs_gap": 0.24138072616820683,
+    "median_abs_gap": 0.006115667811622538,
+    "all_ok": false
+   }
+  },
+  {
    "run": "sgd_native",
    "condition": "sgd",
    "label": "native",
@@ -1101,6 +1737,216 @@
     "n_steps": 300,
     "max_abs_gap": 0.3414614389509165,
     "median_abs_gap": 0.17026303407436738,
+    "all_ok": false
+   }
+  },
+  {
+   "run": "sgd_scale_matched_v2",
+   "condition": "sgd",
+   "label": "scale_matched_v2",
+   "lr": 0.03793,
+   "n_steps": 300,
+   "n_steps_used": 295,
+   "warmup_dropped": 5,
+   "config": {
+    "condition": "sgd",
+    "lr": 0.03793,
+    "weight_decay": 0.01,
+    "decay_semantics": "decoupled (all conditions)",
+    "momentum": 0.9,
+    "nesterov": false,
+    "dampening": 0.0
+   },
+   "loss_first": 3.436309576034546,
+   "loss_last5_mean": 1.980507230758667,
+   "grad_norm_preclip_median": 8.886120796203613,
+   "grad_norm_preclip_max": 52.122703552246094,
+   "clip_fired_fraction": 1,
+   "clip_fired_every_step": true,
+   "clip_fired_first_100": 100,
+   "trajectory": {
+    "loss_first20_mean": 2.831762230396271,
+    "loss_last20_mean": 1.9384777128696442,
+    "loss_drop": 0.8932845175266266,
+    "loss_min": 1.1741600036621094,
+    "loss_max": 3.795828104019165,
+    "all_losses_finite": true,
+    "grad_norm_preclip_median": 8.893370151519775,
+    "threshold_loss_drop": 0.1,
+    "verdict": "trains"
+   },
+   "whole_overshoot": {
+    "point": 1.0374300135856964,
+    "lo": 1.0358662077244063,
+    "hi": 1.0388043613244777,
+    "n": 295
+   },
+   "whole_zero_fraction": {
+    "point": 0.9965599230611144,
+    "lo": 0.9964812822719449,
+    "hi": 0.9966701890183335,
+    "n": 295
+   },
+   "whole_intent_norm": {
+    "point": 1.6631081680114697,
+    "lo": 1.6630719841490118,
+    "hi": 1.6631826838037815,
+    "n": 295
+   },
+   "whole_delivery": {
+    "point": 0.050331604967550264,
+    "lo": 0.04986754711049138,
+    "hi": 0.050890547495143455,
+    "n": 295
+   },
+   "bf16_recorded_overshoot": {
+    "point": 1.0411177454249465,
+    "lo": 1.0392142885862414,
+    "hi": 1.0426967690326432,
+    "n": 295
+   },
+   "bf16_recorded_zero_fraction": {
+    "point": 0.9965629951591292,
+    "lo": 0.9964843541275334,
+    "hi": 0.9966732614562653,
+    "n": 295
+   },
+   "bf16_recorded_intent_norm": {
+    "point": 1.6629331261392986,
+    "lo": 1.6628969187637914,
+    "hi": 1.6630018308259775,
+    "n": 295
+   },
+   "bf16_recorded_delivery": {
+    "point": 0.048135286898217555,
+    "lo": 0.04774369918461802,
+    "hi": 0.048833081192407694,
+    "n": 295
+   },
+   "bf16_true_overshoot": {
+    "point": 1.1233432934355607,
+    "lo": 1.1187021316579964,
+    "hi": 1.1283318761929413,
+    "n": 295
+   },
+   "bf16_true_zero_fraction": {
+    "point": 0.9969563747873809,
+    "lo": 0.9968777080669169,
+    "hi": 0.9970666899652512,
+    "n": 295
+   },
+   "bf16_true_intent_norm": {
+    "point": 1.6617934015665294,
+    "lo": 1.6617287471534323,
+    "hi": 1.6618480772483357,
+    "n": 295
+   },
+   "bf16_true_delivery": {
+    "point": 0.030553629523677486,
+    "lo": 0.029999718196920242,
+    "hi": 0.03120314093838332,
+    "n": 295
+   },
+   "muon_covered_overshoot": {
+    "point": 1.1701919757117407,
+    "lo": 1.1682577441407849,
+    "hi": 1.1726122633978053,
+    "n": 295
+   },
+   "muon_covered_zero_fraction": {
+    "point": 0.9936211831299894,
+    "lo": 0.9934455732067438,
+    "hi": 0.9938429643104615,
+    "n": 295
+   },
+   "muon_covered_intent_norm": {
+    "point": 0.4291660446947556,
+    "lo": 0.429046047908961,
+    "hi": 0.4292746243447153,
+    "n": 295
+   },
+   "muon_covered_delivery": {
+    "point": 0.08127822396334343,
+    "lo": 0.07921876197166265,
+    "hi": 0.08383472077101789,
+    "n": 295
+   },
+   "geom_bf16_true_x_median": {
+    "point": 0.06861132701426184,
+    "lo": 0.06860632826638273,
+    "hi": 0.06861734884076608,
+    "n": 295
+   },
+   "geom_bf16_true_zero_step_fraction": {
+    "point": 0.9969631797558495,
+    "lo": 0.9968845237434398,
+    "hi": 0.9970743708525565,
+    "n": 295
+   },
+   "geom_bf16_true_abs_step_ge_2_share_of_moved": {
+    "point": 0.3411783409368529,
+    "lo": 0.3410430033108247,
+    "hi": 0.34131357320980943,
+    "n": 295
+   },
+   "geom_bf16_true_mean_abs_step_of_moved": {
+    "point": 7.8216953829586755,
+    "lo": 7.572283843049755,
+    "hi": 8.15056177014633,
+    "n": 295
+   },
+   "geom_bf16_true_ratio_predicted_from_x": {
+    "point": 1.1285443905919657,
+    "lo": 1.1231592461333115,
+    "hi": 1.1328024462487667,
+    "n": 295
+   },
+   "geom_bf16_true_decay_x_max": {
+    "point": 0.09672150015830994,
+    "lo": 0.09672150015830994,
+    "hi": 0.09672150015830994,
+    "n": 295
+   },
+   "geom_muon_covered_x_median": {
+    "point": 0.06879943323066555,
+    "lo": 0.06878735354415388,
+    "hi": 0.06881323936893392,
+    "n": 295
+   },
+   "geom_muon_covered_zero_step_fraction": {
+    "point": 0.9936345651998921,
+    "lo": 0.9934625359151641,
+    "hi": 0.993859080583131,
+    "n": 295
+   },
+   "geom_muon_covered_abs_step_ge_2_share_of_moved": {
+    "point": 0.3413278799766903,
+    "lo": 0.34120153789302365,
+    "hi": 0.34144950800326607,
+    "n": 295
+   },
+   "geom_muon_covered_mean_abs_step_of_moved": {
+    "point": 7.8307686547605675,
+    "lo": 7.555097569932506,
+    "hi": 8.175962664986567,
+    "n": 295
+   },
+   "geom_muon_covered_ratio_predicted_from_x": {
+    "point": 1.175630867722334,
+    "lo": 1.173538668890018,
+    "hi": 1.1783028093317935,
+    "n": 295
+   },
+   "geom_muon_covered_decay_x_max": {
+    "point": 0.09672150015830994,
+    "lo": 0.09672150015830994,
+    "hi": 0.09672150015830994,
+    "n": 295
+   },
+   "shadow_self_check": {
+    "n_steps": 300,
+    "max_abs_gap": 0.2579994000189909,
+    "median_abs_gap": 0.15547573451266472,
     "all_ok": false
    }
   }

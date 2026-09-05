@@ -81,6 +81,46 @@
   },
   {
     "optimizer": "SGD",
+    "kind": "run",
+    "multi_step_energy_share": 0.5285629875998197,
+    "overshoot": 1.148927843630697,
+    "one_step_ratio": 1.332865903023087,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "run",
+    "multi_step_energy_share": 0.534990386673634,
+    "overshoot": 1.1503797042580555,
+    "one_step_ratio": 1.3268234853939638,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "run",
+    "multi_step_energy_share": 0.49695919151840917,
+    "overshoot": 1.162796396641146,
+    "one_step_ratio": 1.3319179515313293,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "run",
+    "multi_step_energy_share": 0.47218047605831437,
+    "overshoot": 1.1724423953280614,
+    "one_step_ratio": 1.3363017325586266,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "run",
+    "multi_step_energy_share": 0.4555065781265927,
+    "overshoot": 1.1823450996394433,
+    "one_step_ratio": 1.3372210867900909,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
     "kind": "shadow",
     "multi_step_energy_share": 0.8241604083816106,
     "overshoot": 1.0526897819526948,
@@ -118,6 +158,86 @@
     "overshoot": 1.0837056242441339,
     "one_step_ratio": 1.342568351220816,
     "source": "adamw_native"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7943810574518042,
+    "overshoot": 1.0607620710960621,
+    "one_step_ratio": 1.3237690648468348,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7832981511657072,
+    "overshoot": 1.0642123343152115,
+    "one_step_ratio": 1.3289662614536837,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7917742940402713,
+    "overshoot": 1.0616760693313254,
+    "one_step_ratio": 1.3293973642948478,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7788292668221066,
+    "overshoot": 1.0656271758363007,
+    "one_step_ratio": 1.3241552664006373,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7964186222227335,
+    "overshoot": 1.0596641989748314,
+    "one_step_ratio": 1.3256320214012145,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.8107724057275388,
+    "overshoot": 1.0535654350275654,
+    "one_step_ratio": 1.3009350648196294,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.8218745594096907,
+    "overshoot": 1.0490613521597736,
+    "one_step_ratio": 1.2908162235639271,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.8487314434075234,
+    "overshoot": 1.0418408785015585,
+    "one_step_ratio": 1.2894088587798833,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.8574784156558861,
+    "overshoot": 1.0386193931734726,
+    "one_step_ratio": 1.2775840012771191,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.8621587413910083,
+    "overshoot": 1.0368551455861021,
+    "one_step_ratio": 1.2747899740193183,
+    "source": "muon_lr0.01"
   },
   {
     "optimizer": "SGD",
@@ -202,6 +322,46 @@
   {
     "optimizer": "SGD",
     "kind": "shadow",
+    "multi_step_energy_share": 0.7849619373657184,
+    "overshoot": 1.063831372484451,
+    "one_step_ratio": 1.321402262665572,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.8151775680845382,
+    "overshoot": 1.0541654616503697,
+    "one_step_ratio": 1.318737152030296,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7791152708971163,
+    "overshoot": 1.0670761295296378,
+    "one_step_ratio": 1.330247490243835,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7659579604353195,
+    "overshoot": 1.0717607990458693,
+    "one_step_ratio": 1.3417462067156116,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7564982990554854,
+    "overshoot": 1.0758183719775436,
+    "one_step_ratio": 1.338811284662659,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
     "multi_step_energy_share": 0.6514476430661582,
     "overshoot": 1.1017752991588539,
     "one_step_ratio": 1.3083512604621197,
@@ -278,6 +438,126 @@
     "overshoot": 1.097682170482351,
     "one_step_ratio": 1.3393048554652593,
     "source": "sgd_scale_matched"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7488027172606962,
+    "overshoot": 1.0770822831035038,
+    "one_step_ratio": 1.3342161902369651,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7345850486580485,
+    "overshoot": 1.0825409367412706,
+    "one_step_ratio": 1.3394678960104809,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.7194069459255011,
+    "overshoot": 1.0871327274498022,
+    "one_step_ratio": 1.3374324544999285,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.6975726920666445,
+    "overshoot": 1.0950231572397775,
+    "one_step_ratio": 1.3421819222411773,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "SGD",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.6960972019658056,
+    "overshoot": 1.0951043590970218,
+    "one_step_ratio": 1.341052804703536,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.30394625688312005,
+    "overshoot": 1.2587699726284525,
+    "one_step_ratio": 1.3831059479949175,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.31035146542402614,
+    "overshoot": 1.2552217709482758,
+    "one_step_ratio": 1.3809836618705709,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.31022146312897536,
+    "overshoot": 1.2553404750009665,
+    "one_step_ratio": 1.3812213849902082,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.3105602412947131,
+    "overshoot": 1.255508447594638,
+    "one_step_ratio": 1.3817333964503007,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.30848362701360066,
+    "overshoot": 1.2571267301394002,
+    "one_step_ratio": 1.3831545175283015,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.43614610257303876,
+    "overshoot": 1.1775361759697096,
+    "one_step_ratio": 1.3132572414568784,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.4482978135123858,
+    "overshoot": 1.171953031741683,
+    "one_step_ratio": 1.308294431667925,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.44712692453020597,
+    "overshoot": 1.1727441630437916,
+    "one_step_ratio": 1.3092109145023016,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.44056382509534375,
+    "overshoot": 1.1758158236832497,
+    "one_step_ratio": 1.311458281439361,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.43280163875884736,
+    "overshoot": 1.179407599722615,
+    "one_step_ratio": 1.3141817568280592,
+    "source": "muon_lr0.01"
   },
   {
     "optimizer": "Muon",
@@ -361,6 +641,46 @@
   },
   {
     "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.2324625545967485,
+    "overshoot": 1.320142777744923,
+    "one_step_ratio": 1.4341246070163884,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.23510240879475763,
+    "overshoot": 1.3201849914157877,
+    "one_step_ratio": 1.4358540647496691,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.2354179525212994,
+    "overshoot": 1.3198350621847317,
+    "one_step_ratio": 1.4358139075663494,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.23608162289991078,
+    "overshoot": 1.3205599247376993,
+    "one_step_ratio": 1.4373776239636467,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "run",
+    "multi_step_energy_share": 0.236434020723502,
+    "overshoot": 1.3201845530334528,
+    "one_step_ratio": 1.4371358713103273,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
     "kind": "shadow",
     "multi_step_energy_share": 0.2478416220438735,
     "overshoot": 1.3065732151516551,
@@ -398,6 +718,86 @@
     "overshoot": 1.321819549699334,
     "one_step_ratio": 1.4369486301485261,
     "source": "adamw_native"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.3041451677291284,
+    "overshoot": 1.2611905337000626,
+    "one_step_ratio": 1.3864000469884274,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.3104506427932951,
+    "overshoot": 1.2579733851053523,
+    "one_step_ratio": 1.3844982072073624,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.31034054803080274,
+    "overshoot": 1.258161823812345,
+    "one_step_ratio": 1.3847933684345786,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.3106604267358855,
+    "overshoot": 1.2583647673396918,
+    "one_step_ratio": 1.385298845860038,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.3085781410354957,
+    "overshoot": 1.2599827852309895,
+    "one_step_ratio": 1.3867368412433079,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.43656887414283846,
+    "overshoot": 1.1795868856110832,
+    "one_step_ratio": 1.3164996685782295,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.44782150417448385,
+    "overshoot": 1.1678716285947406,
+    "one_step_ratio": 1.3013572231926052,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.4466553076629497,
+    "overshoot": 1.1687334380778582,
+    "one_step_ratio": 1.302272366333569,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.4400415159702056,
+    "overshoot": 1.171844229318686,
+    "one_step_ratio": 1.3044193530005892,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.4322654503975168,
+    "overshoot": 1.1754511184266734,
+    "one_step_ratio": 1.3075097021063211,
+    "source": "muon_lr0.01"
   },
   {
     "optimizer": "Muon",
@@ -482,6 +882,46 @@
   {
     "optimizer": "Muon",
     "kind": "shadow",
+    "multi_step_energy_share": 0.23302369976709178,
+    "overshoot": 1.319005120723274,
+    "one_step_ratio": 1.432534993582,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23566985231641818,
+    "overshoot": 1.3191964067546338,
+    "one_step_ratio": 1.4343652144670467,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23599216281332772,
+    "overshoot": 1.318962818866353,
+    "one_step_ratio": 1.4344480698380306,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23665567440965865,
+    "overshoot": 1.3197259734203413,
+    "one_step_ratio": 1.4360497103053695,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23699926109178857,
+    "overshoot": 1.3193609894290041,
+    "one_step_ratio": 1.435832412349254,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
     "multi_step_energy_share": 0.2220911210826218,
     "overshoot": 1.330510636552866,
     "one_step_ratio": 1.4417047775609817,
@@ -558,6 +998,46 @@
     "overshoot": 1.3038878560146872,
     "one_step_ratio": 1.4185837416790494,
     "source": "sgd_scale_matched"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23860560507221407,
+    "overshoot": 1.316249838836899,
+    "one_step_ratio": 1.4308944042134055,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23271013007235586,
+    "overshoot": 1.3190637860991365,
+    "one_step_ratio": 1.4323316159875263,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.2340087487687068,
+    "overshoot": 1.3184943147943793,
+    "one_step_ratio": 1.4314292032469598,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23505199478339558,
+    "overshoot": 1.316142031925361,
+    "one_step_ratio": 1.4290064214267804,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "Muon",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.2346460193873469,
+    "overshoot": 1.3188900462534503,
+    "one_step_ratio": 1.4319095280727214,
+    "source": "sgd_scale_matched_v2"
   },
   {
     "optimizer": "AdamW",
@@ -642,6 +1122,86 @@
   {
     "optimizer": "AdamW",
     "kind": "shadow",
+    "multi_step_energy_share": 0.24195249583454484,
+    "overshoot": 1.313704048749424,
+    "one_step_ratio": 1.4360543001217805,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.2775344491194382,
+    "overshoot": 1.2786915795502556,
+    "one_step_ratio": 1.3970912593244738,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.2817669997387593,
+    "overshoot": 1.2754683084277745,
+    "one_step_ratio": 1.3953957909162706,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.28977631814940763,
+    "overshoot": 1.2689761688412822,
+    "one_step_ratio": 1.3902650282578917,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.2898727201896723,
+    "overshoot": 1.269531300602848,
+    "one_step_ratio": 1.3912413703128896,
+    "source": "muon_lr0.005"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.336960867140208,
+    "overshoot": 1.2257283204406544,
+    "one_step_ratio": 1.351385217308392,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.4045096893927824,
+    "overshoot": 1.192071947869822,
+    "one_step_ratio": 1.3204737011311671,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.41933320621473763,
+    "overshoot": 1.1838459856167933,
+    "one_step_ratio": 1.3145618199906803,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.4365078897163611,
+    "overshoot": 1.176890995944246,
+    "one_step_ratio": 1.3110684955018643,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.4265127742885854,
+    "overshoot": 1.1822053338137077,
+    "one_step_ratio": 1.3161917346694614,
+    "source": "muon_lr0.01"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
     "multi_step_energy_share": 0.5666429470385761,
     "overshoot": 1.1059836848231823,
     "one_step_ratio": 1.220524202145345,
@@ -722,6 +1282,46 @@
   {
     "optimizer": "AdamW",
     "kind": "shadow",
+    "multi_step_energy_share": 0.1940653742269579,
+    "overshoot": 1.3624909203130788,
+    "one_step_ratio": 1.4771454168547629,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.23093895523141153,
+    "overshoot": 1.322315309169668,
+    "one_step_ratio": 1.4343228512688597,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.22871270108164177,
+    "overshoot": 1.3258964902402142,
+    "one_step_ratio": 1.4392643695772536,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.22993996568194017,
+    "overshoot": 1.325423491419195,
+    "one_step_ratio": 1.4393266346337583,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.22949969506714477,
+    "overshoot": 1.325611721879207,
+    "one_step_ratio": 1.4395141634967261,
+    "source": "muon_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
     "multi_step_energy_share": 0.2217797819505479,
     "overshoot": 1.3207678891229901,
     "one_step_ratio": 1.4233360071769139,
@@ -798,5 +1398,45 @@
     "overshoot": 1.3170314094207523,
     "one_step_ratio": 1.4300265677394308,
     "source": "sgd_scale_matched"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.21401236314718358,
+    "overshoot": 1.3317392426879517,
+    "one_step_ratio": 1.438143945265546,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.2299017632671997,
+    "overshoot": 1.3230582411992358,
+    "one_step_ratio": 1.4348815464532263,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.22813186369582972,
+    "overshoot": 1.325102703058775,
+    "one_step_ratio": 1.4373155672954412,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.22884891028725177,
+    "overshoot": 1.3237397895907208,
+    "one_step_ratio": 1.435650553300604,
+    "source": "sgd_scale_matched_v2"
+  },
+  {
+    "optimizer": "AdamW",
+    "kind": "shadow",
+    "multi_step_energy_share": 0.2273336605818326,
+    "overshoot": 1.3253190639959536,
+    "one_step_ratio": 1.437223521382224,
+    "source": "sgd_scale_matched_v2"
   }
 ]

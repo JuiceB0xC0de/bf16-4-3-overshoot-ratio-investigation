@@ -1,0 +1,92 @@
+[
+  {
+    "optimizer": "SGD",
+    "run": "sgd_native",
+    "lr": 0.01,
+    "intent_norm": 0.11363360877864817,
+    "overshoot": 1.2367834894651195,
+    "lo": 1.234895020247334,
+    "hi": 1.2383792747173623,
+    "trains": true
+  },
+  {
+    "optimizer": "SGD",
+    "run": "sgd_scale_matched_v2",
+    "lr": 0.03793,
+    "intent_norm": 0.4291660446947556,
+    "overshoot": 1.1701919757117407,
+    "lo": 1.1682577441407849,
+    "hi": 1.1726122633978053,
+    "trains": true
+  },
+  {
+    "optimizer": "SGD",
+    "run": "sgd_scale_matched",
+    "lr": 0.0583,
+    "intent_norm": 0.660589895222285,
+    "overshoot": 1.1495991346775274,
+    "lo": 1.147630889091695,
+    "hi": 1.1507847627457186,
+    "trains": true
+  },
+  {
+    "optimizer": "Muon",
+    "run": "muon_scale_matched_v2",
+    "lr": 0.0014736,
+    "intent_norm": 0.4294376270690731,
+    "overshoot": 1.3200252453188115,
+    "lo": 1.3199711200346218,
+    "hi": 1.3200871849759719,
+    "trains": true
+  },
+  {
+    "optimizer": "Muon",
+    "run": "muon_scale_matched",
+    "lr": 0.00243,
+    "intent_norm": 0.7089280508569257,
+    "overshoot": 1.3058336631135963,
+    "lo": 1.3057768223381763,
+    "hi": 1.3058701827706352,
+    "trains": true
+  },
+  {
+    "optimizer": "Muon",
+    "run": "muon_lr0.005",
+    "lr": 0.005,
+    "intent_norm": 1.4558858181546985,
+    "overshoot": 1.2556043491851596,
+    "lo": 1.255515380075423,
+    "hi": 1.2557115236207432,
+    "trains": true
+  },
+  {
+    "optimizer": "Muon",
+    "run": "muon_lr0.01",
+    "lr": 0.01,
+    "intent_norm": 2.8789568593615176,
+    "overshoot": 1.174399346229614,
+    "lo": 1.1736013869616346,
+    "hi": 1.1749327622945476,
+    "trains": false
+  },
+  {
+    "optimizer": "Muon",
+    "run": "muon_native",
+    "lr": 0.02,
+    "intent_norm": 5.541575723802683,
+    "overshoot": 1.0924121912663023,
+    "lo": 1.0903329418365217,
+    "hi": 1.0929456190934024,
+    "trains": false
+  },
+  {
+    "optimizer": "AdamW",
+    "run": "adamw_native",
+    "lr": 0.0002,
+    "intent_norm": 0.42990197147591236,
+    "overshoot": 1.3246336088812956,
+    "lo": 1.3245277544924903,
+    "hi": 1.3247424331289668,
+    "trains": true
+  }
+]

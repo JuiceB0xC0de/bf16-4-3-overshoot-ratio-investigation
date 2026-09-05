@@ -29,6 +29,11 @@ PRETTY = {"adamw": "AdamW", "sgd": "SGD", "muon": "Muon"}
 LABEL = {"native": "native", "scale_matched": "scale-matched, probe",
          "scale_matched_v2": "scale-matched", "lr0.005": "lr scan",
          "lr0.01": "lr scan"}
+# The two figures that draw one line per run stay readable only while at most
+# two lines share a hue, so they show a fixed slice: the three runs matched to
+# AdamW's update magnitude, plus each rule's own native setting.
+PER_RUN_SUBSET = ("adamw_native", "muon_scale_matched_v2", "sgd_scale_matched_v2",
+                  "muon_lr0.005", "sgd_native")
 def _sup(k: int) -> str:
     digits = "⁰¹²³⁴⁵⁶⁷⁸⁹"
     body = "".join(digits[int(d)] for d in str(abs(k)))
@@ -103,10 +108,11 @@ def _rgba(hex_color: str, alpha: float) -> str:
 
 
 def series_color(condition: str, label: str) -> str:
-    """Native keeps the optimizer's colour; scale-matched is its lighter twin,
-    so the two never rely on position alone to be told apart."""
+    """A rule at its own learning rate keeps the optimizer's colour; the run
+    matched to AdamW's update magnitude is its lighter twin, so the two never
+    rely on position alone to be told apart."""
     base = COLORS[condition]
-    return base if label == "native" else _lighten(base, 0.28)
+    return _lighten(base, 0.28) if label.startswith("scale_matched") else base
 
 
 def series_name(condition: str, label: str) -> str:
@@ -121,15 +127,16 @@ def load(results: Path) -> tuple:
     return by, curve, hist, mech
 
 
-def write_entity_colors(root: Path) -> None:
+def write_entity_colors(root: Path, by: dict) -> None:
+    """The colour every figure must use for each rule, written from the runs
+    that actually exist so a stale name cannot outlive the run it named."""
     path = root / "figures" / "entity_colors.json"
     path.parent.mkdir(parents=True, exist_ok=True)
-    existing = json.loads(path.read_text()) if path.exists() else {}
-    for cond in COLORS:
-        for label in ("native", "scale_matched"):
-            existing[series_name(cond, label)] = series_color(cond, label)
-        existing[PRETTY[cond]] = COLORS[cond]
-    path.write_text(json.dumps(existing, indent=1))
+    out = {PRETTY[c]: COLORS[c] for c in ("adamw", "muon", "sgd")}
+    for r in by["rows"]:
+        out[series_name(r["condition"], r["label"])] = \
+            series_color(r["condition"], r["label"])
+    path.write_text(json.dumps(out, indent=1))
 
 
 # --------------------------------------------------------------------------
@@ -142,42 +149,110 @@ def fig_by_condition(by: dict, subset: str = "muon_covered") -> tuple:
     delivered step of zero size makes the ratio undefined, not zero), and the
     bootstrap interval is the evidence.
     """
-    rows = sorted(by["rows"], key=lambda r: (r["condition"], r["label"]))
     fig = go.Figure()
     data = []
-    groups: dict = {}
-    for r in rows:
-        ci = r[f"{subset}_overshoot"]
-        broke = r["trajectory"]["verdict"] != "trains"
-        # Two lines: at 640px a single-line label with optimizer, setting and
-        # learning rate eats half the panel width.
-        name = (f"{series_name(r['condition'], r['label'])}<br>lr {r['lr']:g}"
-                + (", did not train" if broke else ""))
-        key = (r["condition"], r["label"])
-        groups.setdefault(key, []).append((name, ci, broke))
-        data.append({"run": name, "condition": r["condition"], "label": r["label"],
-                     "lr": r["lr"], "overshoot": ci["point"], "lo": ci["lo"],
-                     "hi": ci["hi"], "n_steps": ci["n"], "trains": not broke})
-    for (cond, label), items in groups.items():
-        colour = series_color(cond, label)
+    # One trace per rule, not per run: nine legend entries would repeat the
+    # y-axis, and several of them would have to share a hue.
+    order: list = []
+    for cond in ("sgd", "muon", "adamw"):        # AdamW drawn last, at the top
+        rows = sorted((r for r in by["rows"] if r["condition"] == cond),
+                      key=lambda r: -r[f"{subset}_intent_norm"]["point"])
+        if not rows:
+            continue
+        names, mid, plus, minus, broke = [], [], [], [], []
+        for r in rows:
+            ci = r[f"{subset}_overshoot"]
+            bad = r["trajectory"]["verdict"] != "trains"
+            # Two lines: at 640px a single-line label with optimizer, setting
+            # and learning rate eats half the panel width.
+            name = (f"{series_name(cond, r['label'])}<br>lr {r['lr']:g}"
+                    + (", did not train" if bad else ""))
+            names.append(name)
+            mid.append(ci["point"])
+            plus.append(ci["hi"] - ci["point"])
+            minus.append(ci["point"] - ci["lo"])
+            broke.append(bad)
+            data.append({"run": name, "condition": cond, "label": r["label"],
+                         "lr": r["lr"], "overshoot": ci["point"],
+                         "lo": ci["lo"], "hi": ci["hi"], "n_steps": ci["n"],
+                         "intent_norm": r[f"{subset}_intent_norm"]["point"],
+                         "trains": not bad})
+        order.extend(names)
         fig.add_trace(go.Scatter(
-            x=[c["point"] for _, c, _ in items],
-            y=[n for n, _, _ in items], mode="markers",
-            marker=dict(color=colour, size=13,
-                        symbol=["circle-open" if b else "circle"
-                                for _, _, b in items],
-                        line=dict(width=2.5, color=colour)),
-            error_x=dict(type="data", symmetric=False,
-                         array=[c["hi"] - c["point"] for _, c, _ in items],
-                         arrayminus=[c["point"] - c["lo"] for _, c, _ in items],
-                         color=colour, thickness=1.4, width=5),
-            name=series_name(cond, label), showlegend=False,
+            x=mid, y=names, mode="markers", name=PRETTY[cond], showlegend=False,
+            marker=dict(color=COLORS[cond], size=13,
+                        symbol=["circle-open" if b else "circle" for b in broke],
+                        line=dict(width=2.5, color=COLORS[cond])),
+            error_x=dict(type="data", symmetric=False, array=plus,
+                         arrayminus=minus, color=COLORS[cond],
+                         thickness=1.4, width=5),
             hovertemplate="%{y}<br>overshoot %{x:.4f}<extra></extra>"))
-    # The y-axis already names every run, so a six-entry legend would repeat it.
+    # The y-axis already names the rule and the setting, so the only encoding
+    # left to explain is the hollow marker.
+    fig.add_trace(go.Scatter(
+        x=[None], y=[None], mode="markers", name="did not train",
+        marker=dict(color="#31362E", size=13, symbol="circle-open",
+                    line=dict(width=2.5, color="#31362E")),
+        hoverinfo="skip"))
     add_reference_line(fig, x=FOUR_THIRDS, label="4/3 = 1.333")
     fig.update_xaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
-    fig.update_yaxes(title_text="Optimizer, learning-rate setting")
+    fig.update_yaxes(title_text="Optimizer, learning-rate setting",
+                     type="category", categoryorder="array", categoryarray=order)
     apply_theme(fig, height=max(320, 150 + 46 * len(data)))
+    return fig, data
+
+
+# --------------------------------------------------------------------------
+# Figure 1b -- the same nine runs read against how big their updates were.
+# --------------------------------------------------------------------------
+def fig_runs_vs_magnitude(by: dict, subset: str = "muon_covered") -> tuple:
+    """Overshoot against intended update norm, one point per real training run.
+
+    The shadow control shows the magnitude dependence on a single trajectory.
+    This is the same relationship in the nine real runs, each with its own
+    trajectory, and it separates the two readings: overshoot falls with update
+    size for every rule, and SGD sits below the other two at every size.
+    """
+    fig = go.Figure()
+    data = []
+    for cond in ("sgd", "muon", "adamw"):
+        rows = sorted((r for r in by["rows"] if r["condition"] == cond),
+                      key=lambda r: r[f"{subset}_intent_norm"]["point"])
+        if not rows:
+            continue
+        xs = [r[f"{subset}_intent_norm"]["point"] for r in rows]
+        ys = [r[f"{subset}_overshoot"]["point"] for r in rows]
+        broke = [r["trajectory"]["verdict"] != "trains" for r in rows]
+        fig.add_trace(go.Scatter(
+            x=xs, y=ys, mode="lines+markers" if len(xs) > 1 else "markers",
+            name=PRETTY[cond], line=dict(color=COLORS[cond], width=2.2),
+            marker=dict(color=COLORS[cond], size=12,
+                        symbol=["circle-open" if b else "circle" for b in broke],
+                        line=dict(width=2.4, color=COLORS[cond])),
+            error_y=dict(type="data", symmetric=False,
+                         array=[r[f"{subset}_overshoot"]["hi"] - y
+                                for r, y in zip(rows, ys)],
+                         arrayminus=[y - r[f"{subset}_overshoot"]["lo"]
+                                     for r, y in zip(rows, ys)],
+                         color=COLORS[cond], thickness=1.2, width=3),
+            customdata=[f"lr {r['lr']:g}" + (", did not train" if b else "")
+                        for r, b in zip(rows, broke)],
+            hovertemplate=(f"{PRETTY[cond]}, %{{customdata}}"
+                           "<br>intent norm %{x:.4g}"
+                           "<br>overshoot %{y:.4f}<extra></extra>")))
+        data.extend({"optimizer": PRETTY[cond], "run": r["run"], "lr": r["lr"],
+                     "intent_norm": x, "overshoot": y,
+                     "lo": r[f"{subset}_overshoot"]["lo"],
+                     "hi": r[f"{subset}_overshoot"]["hi"], "trains": not b}
+                    for r, x, y, b in zip(rows, xs, ys, broke))
+    # No vertical marker for AdamW's magnitude: its point and the two
+    # scale-matched points already sit on the same x to four figures, and a
+    # second reference label collides with the 4/3 one in the top corner.
+    add_reference_line(fig, y=FOUR_THIRDS, label="4/3 = 1.333")
+    fig.update_xaxes(title_text="Intended update norm (log)", type="log",
+                     **DECADE_TICKS)
+    fig.update_yaxes(title_text="Pooled overshoot ‖r‖²/⟨i,r⟩")
+    apply_theme(fig, height=440)
     return fig, data
 
 
@@ -324,9 +399,7 @@ def fig_step_histogram(hist: dict, by: dict, max_ulp: int = 6) -> tuple:
     meta = {r["run"]: r for r in by["rows"]}
     fig = go.Figure()
     data = []
-    keys = [k for k in sorted(hist)
-            if meta.get(k, {}).get("trajectory", {}).get("verdict", "trains")
-            == "trains"]
+    keys = [k for k in PER_RUN_SUBSET if k in hist]
     bins = list(range(max_ulp + 1))
     cats = [str(b) for b in bins] + [f"≥{max_ulp + 1}"]
     for key in keys:
@@ -340,9 +413,10 @@ def fig_step_histogram(hist: dict, by: dict, max_ulp: int = 6) -> tuple:
             x=cats, y=ys, mode="lines+markers",
             name=series_name(cond, label),
             line=dict(color=series_color(cond, label), width=2.4,
-                      dash="solid" if label == "native" else "dot"),
+                      dash="dot" if label.startswith("scale_matched") else "solid"),
             marker=dict(color=series_color(cond, label), size=8,
-                        symbol="circle" if label == "native" else "diamond"),
+                        symbol=("diamond" if label.startswith("scale_matched")
+                                else "circle")),
             hovertemplate="%{fullData.name}<br>%{x} ULP: %{y:.5f}<extra></extra>"))
         for b, y in zip(cats, ys):
             data.append({"run": key, "optimizer": PRETTY[cond], "label": label,
@@ -365,9 +439,7 @@ def fig_x_distribution(hist: dict, by: dict) -> tuple:
     meta = {r["run"]: r for r in by["rows"]}
     fig = go.Figure()
     data = []
-    keys = [k for k in sorted(hist)
-            if meta.get(k, {}).get("trajectory", {}).get("verdict", "trains")
-            == "trains"]
+    keys = [k for k in PER_RUN_SUBSET if k in hist]
     for key in keys:
         h = hist[key]["x_log10_hist"]
         edges, counts = h["edges"], h["counts"]
@@ -383,15 +455,18 @@ def fig_x_distribution(hist: dict, by: dict) -> tuple:
             x=centres, y=share, mode="lines",
             name=series_name(cond, label),
             line=dict(color=series_color(cond, label), width=2.4,
-                      dash="solid" if label == "native" else "dot"),
+                      dash="dot" if label.startswith("scale_matched") else "solid"),
             hovertemplate="%{fullData.name}<br>x = %{x:.3g}<br>share %{y:.5f}"
                           "<extra></extra>"))
         for c, s in zip(centres, share):
             data.append({"run": key, "optimizer": PRETTY[cond], "label": label,
                          "x": c, "share": s})
     add_reference_line(fig, x=1.0, label="x = 1 ULP")
+    # Clipped to where the mass is: under 0.01% of coordinates in any run fall
+    # outside this window, and the full 13-decade frame leaves half the panel
+    # empty.
     fig.update_xaxes(title_text="x = intended update ÷ lattice spacing (log)",
-                     type="log", **DECADE_TICKS)
+                     type="log", range=[-5, 3], **DECADE_TICKS)
     fig.update_yaxes(title_text="Share of coordinates per bin")
     apply_theme(fig, height=430)
     return fig, data
@@ -438,14 +513,21 @@ def main() -> None:
     root, results = Path(args.root), Path(args.results)
     bundles = str(root / "figures")
     by, curve, hist, mech = load(results)
-    write_entity_colors(root)
+    write_entity_colors(root, by)
 
     built = []
     fig, data = fig_by_condition(by)
     save_figure_bundle(fig, "overshoot_by_condition", data=data, root=bundles, alt=(
-        "Pooled overshoot with bootstrap intervals for each of the six runs, "
+        "Pooled overshoot with bootstrap intervals for each of the nine runs, "
         "against a reference line at 4/3."))
     built.append("overshoot_by_condition")
+
+    fig, data = fig_runs_vs_magnitude(by)
+    save_figure_bundle(fig, "runs_overshoot_vs_magnitude", data=data, root=bundles,
+                       alt=("Pooled overshoot against intended update norm on a "
+                            "log x axis, one point per training run, coloured by "
+                            "update rule, against a reference line at 4/3."))
+    built.append("runs_overshoot_vs_magnitude")
 
     fig, data = fig_shadow_curve(curve)
     save_figure_bundle(fig, "shadow_overshoot_vs_magnitude", data=data, root=bundles, alt=(
@@ -490,7 +572,8 @@ def main() -> None:
         "spacing, per optimizer, on a log x axis with a marker at one ULP."))
     built.append("x_distribution")
 
-    expect = {"overshoot_by_condition": 2, "shadow_overshoot_vs_magnitude": 3,
+    expect = {"overshoot_by_condition": 3, "runs_overshoot_vs_magnitude": 3,
+              "shadow_overshoot_vs_magnitude": 3,
               "shadow_overshoot_vs_delivery": 3,
               "shadow_difference_by_trajectory": 2, "ulp_step_histogram": 2,
               "overshoot_vs_multistep_share": 3, "x_distribution": 2}

@@ -6,8 +6,8 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
    "key": "rows[adamw_native].reference_check.checks.whole_overshoot",
    "value": {
-    "observed": 1.326752,
-    "recorded": 1.325717,
+    "observed": 1.3268,
+    "recorded": 1.3257,
     "abs_gap": 0.001035,
     "tol": 0.02
    }
@@ -48,9 +48,9 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
    "key": "sources.adamw_native.at_adamw_magnitude.adamw",
    "value": {
-    "point": 1.324,
-    "lo": 1.324,
-    "hi": 1.324,
+    "point": 1.3241,
+    "lo": 1.3239,
+    "hi": 1.3241,
     "n_steps": 295
    }
   },
@@ -60,9 +60,9 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
    "key": "sources.adamw_native.at_adamw_magnitude.muon",
    "value": {
-    "point": 1.321,
-    "lo": 1.32,
-    "hi": 1.321,
+    "point": 1.3208,
+    "lo": 1.3204,
+    "hi": 1.3213,
     "n_steps": 295
    }
   },
@@ -72,9 +72,9 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
    "key": "sources.adamw_native.at_adamw_magnitude.sgd",
    "value": {
-    "point": 1.079,
-    "lo": 1.078,
-    "hi": 1.08,
+    "point": 1.0792,
+    "lo": 1.0779,
+    "hi": 1.0801,
     "n_steps": 295
    }
   },
@@ -84,9 +84,9 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
    "key": "sources.adamw_native.paired_difference_at_adamw_magnitude.muon_minus_adamw",
    "value": {
-    "point": -0.003126,
-    "lo": -0.003535,
-    "hi": -0.002551,
+    "point": -0.0031256,
+    "lo": -0.0035353,
+    "hi": -0.0025515,
     "n_steps_negative": 251,
     "n_steps": 295
    }
@@ -97,11 +97,11 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
    "key": "across_trajectories.muon_minus_adamw",
    "value": {
-    "min_point": -0.01118,
-    "max_point": 0.003136,
-    "n_trajectories": 5,
-    "n_negative": 4,
-    "n_intervals_excluding_zero": 5
+    "min_point": -0.013937,
+    "max_point": 0.0031361,
+    "n_trajectories": 9,
+    "n_negative": 8,
+    "n_intervals_excluding_zero": 9
    }
   },
   {
@@ -110,9 +110,9 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
    "key": "sources.adamw_native.paired_difference_at_adamw_magnitude.sgd_minus_adamw",
    "value": {
-    "point": -0.2452,
-    "lo": -0.2462,
-    "hi": -0.244,
+    "point": -0.24521,
+    "lo": -0.24624,
+    "hi": -0.24398,
     "n_steps_negative": 295,
     "n_steps": 295
    }
@@ -123,11 +123,11 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
    "key": "across_trajectories.sgd_minus_adamw",
    "value": {
-    "min_point": -0.2452,
-    "max_point": -0.06653,
-    "n_trajectories": 5,
-    "n_negative": 5,
-    "n_intervals_excluding_zero": 5
+    "min_point": -0.24813,
+    "max_point": -0.066535,
+    "n_trajectories": 9,
+    "n_negative": 9,
+    "n_intervals_excluding_zero": 9
    }
   },
   {
@@ -137,39 +137,39 @@
    "key": "sources.adamw_native.matched_delivery.at",
    "value": {
     "0.03": {
-     "adamw": 1.33,
-     "muon": 1.329,
+     "adamw": 1.3305,
+     "muon": 1.3286,
      "sgd": 1.085,
-     "muon_minus_adamw": -0.001841,
-     "sgd_minus_adamw": -0.2455
+     "muon_minus_adamw": -0.0018411,
+     "sgd_minus_adamw": -0.24546
     },
     "0.05": {
-     "adamw": 1.328,
-     "muon": 1.325,
-     "sgd": 1.079,
-     "muon_minus_adamw": -0.002848,
-     "sgd_minus_adamw": -0.2488
+     "adamw": 1.3281,
+     "muon": 1.3252,
+     "sgd": 1.0792,
+     "muon_minus_adamw": -0.0028479,
+     "sgd_minus_adamw": -0.24883
     },
     "0.09": {
-     "adamw": 1.324,
-     "muon": 1.32,
-     "sgd": 1.075,
-     "muon_minus_adamw": -0.00399,
-     "sgd_minus_adamw": -0.2489
+     "adamw": 1.3242,
+     "muon": 1.3202,
+     "sgd": 1.0753,
+     "muon_minus_adamw": -0.0039904,
+     "sgd_minus_adamw": -0.24889
     },
     "0.15": {
-     "adamw": 1.313,
+     "adamw": 1.3135,
      "muon": 1.302,
      "sgd": 1.068,
-     "muon_minus_adamw": -0.01141,
-     "sgd_minus_adamw": -0.2454
+     "muon_minus_adamw": -0.011413,
+     "sgd_minus_adamw": -0.24544
     },
     "0.25": {
-     "adamw": 1.281,
-     "muon": 1.26,
-     "sgd": 1.055,
-     "muon_minus_adamw": -0.02174,
-     "sgd_minus_adamw": -0.2261
+     "adamw": 1.2813,
+     "muon": 1.2595,
+     "sgd": 1.0552,
+     "muon_minus_adamw": -0.021739,
+     "sgd_minus_adamw": -0.22606
     }
    }
   },
@@ -180,12 +180,12 @@
    "key": "sources.adamw_native.curve.adamw[0] and [-1]",
    "value": {
     "small_multiplier": 0.03125,
-    "small_overshoot": 1.332,
+    "small_overshoot": 1.3323,
     "small_zero_fraction": 0.9971,
     "large_multiplier": 8.0,
-    "large_overshoot": 1.166,
+    "large_overshoot": 1.1661,
     "large_zero_fraction": 0.4687,
-    "four_thirds": 1.333
+    "four_thirds": 1.3333
    }
   },
   {
@@ -195,15 +195,53 @@
    "key": "rows[adamw_native]",
    "value": {
     "lr": 0.0002,
-    "overshoot_muon_covered": 1.325,
-    "lo": 1.325,
-    "hi": 1.325,
-    "overshoot_whole": 1.322,
+    "overshoot_muon_covered": 1.3246,
+    "lo": 1.3245,
+    "hi": 1.3247,
+    "overshoot_whole": 1.3221,
     "intent_norm": 0.4299,
     "loss_last5": 1.822,
     "clip_fired_fraction": 1,
     "trajectory_verdict": "trains",
     "loss_drop": 0.5693,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_lr0.005",
+   "claim": "300-step run muon_lr0.005 at lr 0.005.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_lr0.005]",
+   "value": {
+    "lr": 0.005,
+    "overshoot_muon_covered": 1.2556,
+    "lo": 1.2555,
+    "hi": 1.2557,
+    "overshoot_whole": 1.2577,
+    "intent_norm": 1.456,
+    "loss_last5": 2.185,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 0.3824,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_lr0.01",
+   "claim": "300-step run muon_lr0.01 at lr 0.01.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_lr0.01]",
+   "value": {
+    "lr": 0.01,
+    "overshoot_muon_covered": 1.1744,
+    "lo": 1.1736,
+    "hi": 1.1749,
+    "overshoot_whole": 1.1759,
+    "intent_norm": 2.879,
+    "loss_last5": 2.765,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "does_not_train",
+    "loss_drop": -0.2991,
     "n_steps_used": 295
    }
   },
@@ -214,9 +252,9 @@
    "key": "rows[muon_native]",
    "value": {
     "lr": 0.02,
-    "overshoot_muon_covered": 1.092,
-    "lo": 1.09,
-    "hi": 1.093,
+    "overshoot_muon_covered": 1.0924,
+    "lo": 1.0903,
+    "hi": 1.0929,
     "overshoot_whole": 1.093,
     "intent_norm": 5.542,
     "loss_last5": 3.546,
@@ -233,15 +271,34 @@
    "key": "rows[muon_scale_matched]",
    "value": {
     "lr": 0.00243,
-    "overshoot_muon_covered": 1.306,
-    "lo": 1.306,
-    "hi": 1.306,
-    "overshoot_whole": 1.308,
+    "overshoot_muon_covered": 1.3058,
+    "lo": 1.3058,
+    "hi": 1.3059,
+    "overshoot_whole": 1.3082,
     "intent_norm": 0.7089,
     "loss_last5": 1.835,
     "clip_fired_fraction": 1,
     "trajectory_verdict": "trains",
     "loss_drop": 0.875,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_scale_matched_v2",
+   "claim": "300-step run muon_scale_matched_v2 at lr 0.0014736.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_scale_matched_v2]",
+   "value": {
+    "lr": 0.0014736,
+    "overshoot_muon_covered": 1.32,
+    "lo": 1.32,
+    "hi": 1.3201,
+    "overshoot_whole": 1.3224,
+    "intent_norm": 0.4294,
+    "loss_last5": 1.807,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 1.039,
     "n_steps_used": 295
    }
   },
@@ -252,10 +309,10 @@
    "key": "rows[sgd_native]",
    "value": {
     "lr": 0.01,
-    "overshoot_muon_covered": 1.237,
-    "lo": 1.235,
-    "hi": 1.238,
-    "overshoot_whole": 1.06,
+    "overshoot_muon_covered": 1.2368,
+    "lo": 1.2349,
+    "hi": 1.2384,
+    "overshoot_whole": 1.0598,
     "intent_norm": 0.1136,
     "loss_last5": 2.138,
     "clip_fired_fraction": 1,
@@ -271,10 +328,10 @@
    "key": "rows[sgd_scale_matched]",
    "value": {
     "lr": 0.0583,
-    "overshoot_muon_covered": 1.15,
-    "lo": 1.148,
-    "hi": 1.151,
-    "overshoot_whole": 1.048,
+    "overshoot_muon_covered": 1.1496,
+    "lo": 1.1476,
+    "hi": 1.1508,
+    "overshoot_whole": 1.0481,
     "intent_norm": 0.6606,
     "loss_last5": 2.139,
     "clip_fired_fraction": 1,
@@ -284,16 +341,146 @@
    }
   },
   {
+   "id": "run_sgd_scale_matched_v2",
+   "claim": "300-step run sgd_scale_matched_v2 at lr 0.03793.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[sgd_scale_matched_v2]",
+   "value": {
+    "lr": 0.03793,
+    "overshoot_muon_covered": 1.1702,
+    "lo": 1.1683,
+    "hi": 1.1726,
+    "overshoot_whole": 1.0374,
+    "intent_norm": 0.4292,
+    "loss_last5": 1.981,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 0.8933,
+    "n_steps_used": 295
+   }
+  },
+  {
    "id": "scale_match_drift",
-   "claim": "The scale-matched multipliers set from a 20-step probe overshot AdamW's 300-step median update norm.",
+   "claim": "The scale-matched multipliers set from a 20-step probe overshot AdamW's 300-step median update norm; the corrected reruns land on it.",
    "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
    "key": "rows[*].muon_covered_intent_norm",
    "value": {
     "adamw_median_intent_norm": 0.4299,
+    "muon_lr0.005": 3.387,
+    "muon_lr0.01": 6.697,
     "muon_native": 12.89,
     "muon_scale_matched": 1.649,
+    "muon_scale_matched_v2": 0.9989,
     "sgd_native": 0.2643,
-    "sgd_scale_matched": 1.537
+    "sgd_scale_matched": 1.537,
+    "sgd_scale_matched_v2": 0.9983
+   }
+  },
+  {
+   "id": "matched_magnitude_runs",
+   "claim": "In the real 300-step runs held to AdamW's own update magnitude, Muon lands next to AdamW and SGD with momentum lands well below both, reproducing the shadow control's ordering on three separate trajectories.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[adamw_native|muon_scale_matched_v2|sgd_scale_matched_v2]",
+   "value": {
+    "AdamW": {
+     "lr": 0.0002,
+     "overshoot": 1.3246,
+     "lo": 1.3245,
+     "hi": 1.3247,
+     "intent_norm": 0.4299,
+     "intent_norm_ratio_vs_adamw": 1.0,
+     "minus_adamw": 0.0
+    },
+    "Muon": {
+     "lr": 0.0014736,
+     "overshoot": 1.32,
+     "lo": 1.32,
+     "hi": 1.3201,
+     "intent_norm": 0.4294,
+     "intent_norm_ratio_vs_adamw": 0.9989,
+     "minus_adamw": -0.00461
+    },
+    "SGD + momentum": {
+     "lr": 0.03793,
+     "overshoot": 1.1702,
+     "lo": 1.1683,
+     "hi": 1.1726,
+     "intent_norm": 0.4292,
+     "intent_norm_ratio_vs_adamw": 0.9983,
+     "minus_adamw": -0.154
+    }
+   }
+  },
+  {
+   "id": "sgd_smaller_step_still_lower",
+   "claim": "SGD at its own learning rate takes an update about a quarter the size of AdamW's and still sits below AdamW's overshoot, so a smaller step does not account for the gap.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[sgd_native] vs rows[adamw_native]",
+   "value": {
+    "sgd_lr": 0.01,
+    "sgd_intent_norm": 0.1136,
+    "sgd_intent_norm_ratio_vs_adamw": 0.2643,
+    "sgd_overshoot": 1.2368,
+    "adamw_overshoot": 1.3246
+   }
+  },
+  {
+   "id": "muon_lr_scan",
+   "claim": "Sweeping Muon's learning rate over a 14-fold range walks its overshoot down the same magnitude curve the shadow control traces, in real runs on five separate trajectories.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_*]",
+   "value": [
+    {
+     "lr": 0.0014736,
+     "intent_norm": 0.4294,
+     "overshoot": 1.32,
+     "trajectory_verdict": "trains"
+    },
+    {
+     "lr": 0.00243,
+     "intent_norm": 0.7089,
+     "overshoot": 1.3058,
+     "trajectory_verdict": "trains"
+    },
+    {
+     "lr": 0.005,
+     "intent_norm": 1.456,
+     "overshoot": 1.2556,
+     "trajectory_verdict": "trains"
+    },
+    {
+     "lr": 0.01,
+     "intent_norm": 2.879,
+     "overshoot": 1.1744,
+     "trajectory_verdict": "does_not_train"
+    },
+    {
+     "lr": 0.02,
+     "intent_norm": 5.542,
+     "overshoot": 1.0924,
+     "trajectory_verdict": "does_not_train"
+    }
+   ]
+  },
+  {
+   "id": "predicted_from_x",
+   "claim": "Predicting each run's overshoot from its measured distribution of x = |intended update| / lattice spacing alone, under round-to-nearest, reproduces the measured value; nothing optimizer-specific is left over.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[*].muon_covered_overshoot minus rows[*].geom_muon_covered_ratio_predicted_from_x",
+   "value": {
+    "per_run_signed_gap": {
+     "adamw_native": 0.000314,
+     "muon_lr0.005": -4.09e-05,
+     "muon_lr0.01": 0.00132,
+     "muon_native": 0.00375,
+     "muon_scale_matched": 0.000694,
+     "muon_scale_matched_v2": -0.000339,
+     "sgd_native": 0.00177,
+     "sgd_scale_matched": -0.0173,
+     "sgd_scale_matched_v2": -0.00544
+    },
+    "max_abs_gap": 0.0173,
+    "median_abs_gap": 0.00132
    }
   },
   {
@@ -306,8 +493,36 @@
     "x_median": 0.06857,
     "x_p05": 0.005135,
     "x_p95": 0.9182,
-    "ratio_from_realized_steps": 1.325,
-    "ratio_predicted_from_x": 1.324
+    "ratio_from_realized_steps": 1.3248,
+    "ratio_predicted_from_x": 1.3243
+   }
+  },
+  {
+   "id": "xdist_muon_lr0.005",
+   "claim": "Update-to-lattice-spacing distribution for muon_lr0.005 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_lr0.005",
+   "value": {
+    "zero_step_fraction": 0.7342,
+    "x_median": 0.2082,
+    "x_p05": 0.01457,
+    "x_p95": 2.979,
+    "ratio_from_realized_steps": 1.2571,
+    "ratio_predicted_from_x": 1.2569
+   }
+  },
+  {
+   "id": "xdist_muon_lr0.01",
+   "claim": "Update-to-lattice-spacing distribution for muon_lr0.01 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_lr0.01",
+   "value": {
+    "zero_step_fraction": 0.5755,
+    "x_median": 0.3838,
+    "x_p05": 0.02621,
+    "x_p95": 5.494,
+    "ratio_from_realized_steps": 1.1794,
+    "ratio_predicted_from_x": 1.1777
    }
   },
   {
@@ -320,8 +535,8 @@
     "x_median": 0.5982,
     "x_p05": 0.03884,
     "x_p95": 8.62,
-    "ratio_from_realized_steps": 1.105,
-    "ratio_predicted_from_x": 1.102
+    "ratio_from_realized_steps": 1.1052,
+    "ratio_predicted_from_x": 1.1017
    }
   },
   {
@@ -335,7 +550,21 @@
     "x_p05": 0.007239,
     "x_p95": 1.465,
     "ratio_from_realized_steps": 1.306,
-    "ratio_predicted_from_x": 1.305
+    "ratio_predicted_from_x": 1.3052
+   }
+  },
+  {
+   "id": "xdist_muon_scale_matched_v2",
+   "claim": "Update-to-lattice-spacing distribution for muon_scale_matched_v2 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_scale_matched_v2",
+   "value": {
+    "zero_step_fraction": 0.9133,
+    "x_median": 0.0629,
+    "x_p05": 0.004401,
+    "x_p95": 0.8835,
+    "ratio_from_realized_steps": 1.3202,
+    "ratio_predicted_from_x": 1.3202
    }
   },
   {
@@ -348,8 +577,8 @@
     "x_median": 0.01818,
     "x_p05": 0.01042,
     "x_p95": 0.03278,
-    "ratio_from_realized_steps": 1.239,
-    "ratio_predicted_from_x": 1.237
+    "ratio_from_realized_steps": 1.2391,
+    "ratio_predicted_from_x": 1.2373
    }
   },
   {
@@ -362,8 +591,22 @@
     "x_median": 0.1059,
     "x_p05": 0.06253,
     "x_p95": 0.1834,
-    "ratio_from_realized_steps": 1.153,
-    "ratio_predicted_from_x": 1.169
+    "ratio_from_realized_steps": 1.1526,
+    "ratio_predicted_from_x": 1.1689
+   }
+  },
+  {
+   "id": "xdist_sgd_scale_matched_v2",
+   "claim": "Update-to-lattice-spacing distribution for sgd_scale_matched_v2 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "sgd_scale_matched_v2",
+   "value": {
+    "zero_step_fraction": 0.9936,
+    "x_median": 0.0688,
+    "x_p05": 0.04282,
+    "x_p95": 0.1123,
+    "ratio_from_realized_steps": 1.1823,
+    "ratio_predicted_from_x": 1.1873
    }
   },
   {
@@ -372,15 +615,15 @@
    "source_file": "experiments/experiment-2-xk0pk0/results/mechanism.json",
    "key": "one_step_ratio_range, multi_step_ratio_range",
    "value": {
-    "n_points": 100,
-    "n_shadow_points": 75,
+    "n_points": 180,
+    "n_shadow_points": 135,
     "one_step_ratio_range": [
      1.199,
-     1.457
+     1.4771
     ],
     "multi_step_ratio_range": [
-     1.004,
-     1.054
+     1.0039,
+     1.0542
     ]
    }
   },
@@ -402,5 +645,5 @@
    }
   }
  ],
- "n_claims": 26
+ "n_claims": 38
 }
