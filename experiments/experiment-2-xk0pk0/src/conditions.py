@@ -58,11 +58,31 @@ MUON_MOMENTUM = 0.95
 # cannot masquerade as the recorded one.  From the published per-tensor table.
 EXPECTED_N_PARAMS = 146
 EXPECTED_NUMEL = 186_849_600
-EXPECTED_FP32_PARAMS = 24
-EXPECTED_FP32_NUMEL = 576
 EXPECTED_EMBEDDING_NUMEL = 98_500_608
-FP32_SUFFIXES = (".mixer.D", ".mixer.dt_bias")
 EMBEDDING_NAME = "backbone.embedding.weight"
+
+# The published extractor decides dtype by NAME:
+#   transmission_extract.py: FP32_SUFFIXES = (".mixer.D", ".mixer.dt_bias")
+#   "The only float32 parameters in this model. Everything else is bfloat16"
+# That is not what the model holds.  mamba_ssm's Mamba3 constructs dt_bias, D,
+# B_bias and C_bias in float32 and ``load_state_dict`` copies the bf16
+# checkpoint into them preserving the destination dtype, so 48 tensors /
+# 74,304 coordinates are genuinely float32, not 24 / 576.
+#
+# The recorded run had it the same way -- its own per-tensor table shows
+# B_bias and C_bias with overshoot 1.00002 and 1.00001 and flush fractions of
+# 0.00016 and 0.0, while every true bfloat16 tensor sits near 1.32 with a
+# flush fraction above 0.91.  So the reconstruction is faithful and only the
+# published *label* was wrong; the recorded "bf16" pool carries 73,728 fp32
+# coordinates, 0.0395% of it.
+#
+# Both masks are therefore kept.  The name mask reproduces the published
+# numbers; the dtype mask is the one the bf16 lattice geometry is entitled to.
+RECORDED_FP32_SUFFIXES = (".mixer.D", ".mixer.dt_bias")
+EXPECTED_RECORDED_FP32_PARAMS = 24
+EXPECTED_RECORDED_FP32_NUMEL = 576
+EXPECTED_TRUE_FP32_PARAMS = 48
+EXPECTED_TRUE_FP32_NUMEL = 74_304
 
 
 def set_seed(seed: int = SEED) -> None:
@@ -112,7 +132,8 @@ class ParamRecord:
     param: torch.nn.Parameter
     numel: int
     ndim: int
-    native_fp32: bool
+    native_fp32: bool      # the dtype the tensor actually has
+    recorded_fp32: bool    # what the published name-based mask calls it
     muon_covered: bool
     updater: str = "adamw"
 
@@ -128,50 +149,65 @@ def build_roster(model) -> list:
     """
     records = []
     for i, (name, p) in enumerate(model.named_parameters()):
-        native_fp32 = p.dtype == torch.float32
-        if native_fp32 != name.endswith(FP32_SUFFIXES):
-            raise RuntimeError(
-                f"{name}: dtype {p.dtype} disagrees with the recorded fp32 "
-                f"suffix convention {FP32_SUFFIXES}"
-            )
         covered = p.ndim == 2 and name != EMBEDDING_NAME and "lm_head" not in name
-        records.append(ParamRecord(i, name, p, p.numel(), p.ndim, native_fp32, covered))
+        records.append(ParamRecord(
+            index=i, name=name, param=p, numel=p.numel(), ndim=p.ndim,
+            native_fp32=p.dtype == torch.float32,
+            recorded_fp32=name.endswith(RECORDED_FP32_SUFFIXES),
+            muon_covered=covered))
 
     total = sum(r.numel for r in records)
-    n_fp32 = sum(1 for r in records if r.native_fp32)
-    fp32_numel = sum(r.numel for r in records if r.native_fp32)
     embedding = [r for r in records if r.name == EMBEDDING_NAME]
-    problems = []
-    if len(records) != EXPECTED_N_PARAMS:
-        problems.append(f"n_params {len(records)} != {EXPECTED_N_PARAMS}")
-    if total != EXPECTED_NUMEL:
-        problems.append(f"numel {total} != {EXPECTED_NUMEL}")
-    if n_fp32 != EXPECTED_FP32_PARAMS:
-        problems.append(f"fp32 params {n_fp32} != {EXPECTED_FP32_PARAMS}")
-    if fp32_numel != EXPECTED_FP32_NUMEL:
-        problems.append(f"fp32 numel {fp32_numel} != {EXPECTED_FP32_NUMEL}")
-    if not embedding or embedding[0].numel != EXPECTED_EMBEDDING_NUMEL:
-        problems.append(f"embedding numel != {EXPECTED_EMBEDDING_NUMEL}")
+    checks = [
+        ("n_params", len(records), EXPECTED_N_PARAMS),
+        ("numel", total, EXPECTED_NUMEL),
+        ("recorded-mask fp32 params",
+         sum(1 for r in records if r.recorded_fp32), EXPECTED_RECORDED_FP32_PARAMS),
+        ("recorded-mask fp32 numel",
+         sum(r.numel for r in records if r.recorded_fp32), EXPECTED_RECORDED_FP32_NUMEL),
+        ("true fp32 params",
+         sum(1 for r in records if r.native_fp32), EXPECTED_TRUE_FP32_PARAMS),
+        ("true fp32 numel",
+         sum(r.numel for r in records if r.native_fp32), EXPECTED_TRUE_FP32_NUMEL),
+        ("embedding numel",
+         embedding[0].numel if embedding else -1, EXPECTED_EMBEDDING_NUMEL),
+    ]
+    problems = [f"{label} {got} != {want}" for label, got, want in checks if got != want]
     if problems:
         raise RuntimeError("loaded model does not match the recorded structure: "
                            + "; ".join(problems))
+    # Every parameter Muon writes must really be on the bf16 lattice, or the
+    # primary comparison would mix two storage formats.
+    bad = [r.name for r in records if r.muon_covered and r.native_fp32]
+    if bad:
+        raise RuntimeError(f"Muon-covered parameters are not bfloat16: {bad}")
     return records
 
 
 def roster_summary(records: list) -> dict:
     covered = [r for r in records if r.muon_covered]
+    total = sum(r.numel for r in records)
+    mislabelled = [r for r in records if r.native_fp32 and not r.recorded_fp32]
     return {
         "n_params": len(records),
-        "numel": sum(r.numel for r in records),
-        "n_bf16_params": sum(1 for r in records if not r.native_fp32),
-        "bf16_numel": sum(r.numel for r in records if not r.native_fp32),
-        "n_fp32_params": sum(1 for r in records if r.native_fp32),
-        "fp32_numel": sum(r.numel for r in records if r.native_fp32),
+        "numel": total,
+        "n_true_bf16_params": sum(1 for r in records if not r.native_fp32),
+        "true_bf16_numel": sum(r.numel for r in records if not r.native_fp32),
+        "n_true_fp32_params": sum(1 for r in records if r.native_fp32),
+        "true_fp32_numel": sum(r.numel for r in records if r.native_fp32),
+        "n_recorded_fp32_params": sum(1 for r in records if r.recorded_fp32),
+        "recorded_fp32_numel": sum(r.numel for r in records if r.recorded_fp32),
+        "mislabelled_fp32_names": sorted({r.name.split(".")[-1] for r in mislabelled}),
+        "mislabelled_fp32_params": len(mislabelled),
+        "mislabelled_fp32_numel": sum(r.numel for r in mislabelled),
+        "mislabelled_share_of_recorded_bf16_pool": (
+            sum(r.numel for r in mislabelled)
+            / sum(r.numel for r in records if not r.recorded_fp32)),
         "n_muon_covered_params": len(covered),
         "muon_covered_numel": sum(r.numel for r in covered),
-        "muon_covered_share_of_numel": (
-            sum(r.numel for r in covered) / sum(r.numel for r in records)),
-        "muon_covered_names_sample": [r.name for r in covered[:6]],
+        "muon_covered_share_of_numel": sum(r.numel for r in covered) / total,
+        "muon_covered_families": sorted({
+            ".".join(r.name.split(".")[-2:]) for r in covered}),
         "muon_excluded_2d": [r.name for r in records
                              if r.ndim == 2 and not r.muon_covered],
         "shapes_by_ndim": {

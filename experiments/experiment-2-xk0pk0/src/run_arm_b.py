@@ -26,6 +26,7 @@ import torch.nn.functional as F
 import conditions as C
 from data import StepData
 from observer import DeliveryObserver, grad_stats, scalar_row
+from shadow import REFERENCE_MULTIPLIER, ShadowOptimizers, self_check
 
 # Recorded values for run 20260810T091311Z (187M, clip 1.0) at optimizer step
 # 100 / dataset row 99, from capture_summary_clip1.jsonl.
@@ -78,6 +79,21 @@ def run(args) -> dict:
     data_report = data.verify()
     data_report.update(data.window_stats(args.steps))
     print(f"[data] {json.dumps(data_report)}", flush=True)
+    # Show the text that actually enters the forward pass, with its
+    # tokenization and loss mask, so the input is checked rather than assumed.
+    for step in (1, 100):
+        ids = data.ids_for_step(step)
+        print(f"[data] --- step {step} (dataset row {data.row_index(step)}), "
+              f"{len(ids)} tokens, {len(ids) - 1} supervised targets ---",
+              flush=True)
+        print(repr(data.tokenizer.decode(ids, skip_special_tokens=False))[:900],
+              flush=True)
+        head = data.tokenizer.convert_ids_to_tokens(ids[:6])
+        tail = data.tokenizer.convert_ids_to_tokens(ids[-4:])
+        print(f"[data] first ids {ids[:6]} -> {head}", flush=True)
+        print(f"[data] last  ids {ids[-4:]} -> {tail}", flush=True)
+        print(f"[data] loss mask: targets are ids[1:], every position "
+              f"supervised (no prompt masking)", flush=True)
     if args.mode == "verify":
         return {"mode": "verify", "data": data_report}
 
@@ -108,6 +124,8 @@ def run(args) -> dict:
 
     rows, captures, reference_check = [], {}, None
     full_steps = set(args.full_capture_steps or [])
+    shadow = ShadowOptimizers(records) if args.shadow else None
+    shadow_rows, shadow_checks = [], []
     t0 = time.time()
 
     for step in range(1, args.steps + 1):
@@ -122,22 +140,48 @@ def run(args) -> dict:
         returned_norm = float(torch.nn.utils.clip_grad_norm_(
             model.parameters(), max_norm=C.CLIP_MAX_NORM))
         clip = {
-            "loss_f32": float(loss_f32),
+            "loss_f32": float(loss_f32.detach()),
             "loss_native": float(loss_native),
             "grad_norm_preclip": returned_norm,
             "clip_fired": int(returned_norm > C.CLIP_MAX_NORM),
             **pre_clip,
         }
 
+        # The shadow needs the pre-step parameters and the post-clip gradients
+        # of the covered set, kept independently of the observer's snapshot so
+        # neither measurement can disturb the other.
+        shadow_pre = shadow_grads = None
+        if shadow is not None:
+            shadow_pre = {r.index: r.param.detach().clone()
+                          for r in records if r.muon_covered}
+            shadow_grads = {r.index: r.param.grad.detach().clone()
+                            for r in records if r.muon_covered}
+
         observer.snapshot()
         condition.step()
         want_full = step in full_steps
         capture = observer.capture(want_geometry=True, want_per_tensor=want_full)
 
-        row = scalar_row(step, row_index, float(loss_f32), capture, clip)
+        row = scalar_row(step, row_index, float(loss_f32.detach()), capture, clip)
         rows.append(row)
         if want_full:
             captures[str(step)] = {"clip": clip, **capture}
+
+        if shadow is not None:
+            measured = capture["pooled"]["muon_covered"]
+            sh = shadow.measure(shadow_pre, shadow_grads, measured["ideal"],
+                                want_geometry=want_full)
+            check = self_check(sh, measured["overshoot"])
+            shadow_checks.append(check)
+            shadow_rows.append({"step": step, "dataset_row": row_index,
+                                "adamw_intent_norm": measured["ideal"],
+                                "self_check": check, "scales": sh})
+            del shadow_pre, shadow_grads
+            if step % args.log_every == 0 or step == 1:
+                ref = f"{REFERENCE_MULTIPLIER:.6g}"
+                print("  [shadow] at AdamW's own magnitude: "
+                      + "  ".join(f"{k}={sh[k][ref]['overshoot']:.5f}" for k in sh)
+                      + f"  | self-check gap {check['abs_gap']:.2e}", flush=True)
         if wb is not None:
             wb.log({k: v for k, v in row.items() if isinstance(v, (int, float))},
                    step=step)
@@ -153,7 +197,7 @@ def run(args) -> dict:
                 f"loss={row['loss']:.4f} gnorm={returned_norm:.4f} "
                 f"overshoot(whole)={row['whole/overshoot']:.6f} "
                 f"overshoot(muon_set)={row['muon_covered/overshoot']:.6f} "
-                f"zero_frac(bf16)={row['bf16/zero_fraction']:.6f} "
+                f"zero_frac(bf16)={row['bf16_recorded/zero_fraction']:.6f} "
                 f"| {rate:.2f} step/s",
                 flush=True,
             )
@@ -179,6 +223,14 @@ def run(args) -> dict:
         "rows": rows,
         "full_captures": captures,
         "reference_check": reference_check,
+        "shadow_rows": shadow_rows,
+        "shadow_self_check": ({
+            "n_steps": len(shadow_checks),
+            "max_abs_gap": max(c["abs_gap"] for c in shadow_checks),
+            "median_abs_gap": sorted(c["abs_gap"] for c in shadow_checks)[
+                len(shadow_checks) // 2],
+            "all_ok": all(c["ok"] for c in shadow_checks),
+        } if shadow_checks else None),
         "wandb_url": wb.url if wb is not None else None,
     }
     if wb is not None:
@@ -194,10 +246,10 @@ def check_reference(row: dict) -> dict:
                               REFERENCE["grad_norm_preclip"], 0.15),
         "whole_overshoot": (row["whole/overshoot"],
                             REFERENCE["whole_overshoot"], REFERENCE_TOL["overshoot"]),
-        "bf16_zero_fraction": (row["bf16/zero_fraction"],
+        "bf16_zero_fraction": (row["bf16_recorded/zero_fraction"],
                                REFERENCE["bf16_zero_fraction"],
                                REFERENCE_TOL["zero_fraction"]),
-        "bf16_delivery": (row["bf16/delivery"], REFERENCE["bf16_delivery"], 0.05),
+        "bf16_delivery": (row["bf16_recorded/delivery"], REFERENCE["bf16_delivery"], 0.05),
     }
     out = {"passed": True, "checks": {}}
     for name, (got, want, tol) in checks.items():
@@ -226,6 +278,9 @@ def main() -> None:
     ap.add_argument("--log-every", type=int, default=20)
     ap.add_argument("--full-capture-steps", type=int, nargs="*",
                     default=[1, 10, 50, 100, 200, 300])
+    ap.add_argument("--shadow", action="store_true",
+                    help="measure every optimizer's overshoot-vs-scale curve "
+                         "on this run's trajectory, with no trajectory confound")
     ap.add_argument("--wandb", action="store_true")
     ap.add_argument("--wandb-project", default="mamba3-arm-b-optimizer-overshoot")
     ap.add_argument("--out", default=None)

@@ -9,16 +9,24 @@ the step and subtracts.
     intent = the condition's own fp32 update rule from post-step native state
     delivery = |r|/|i| ; cosine = <i,r>/(|i||r|) ; overshoot = delivery/cosine
 
-Three coordinate subsets are pooled independently, using the same rule as
+Four coordinate subsets are pooled independently, using the same rule as
 ``transmission_extract.py::_pair``:
 
-* ``whole``  -- every optimizer parameter, the published headline number
-* ``bf16``   -- the 122 natively-bfloat16 parameters
-* ``muon_covered`` -- the 2-D hidden weights Muon actually orthogonalizes,
-  which is the primary comparison set because it is the only one where all
-  three conditions have the same optimizer writing the same coordinates
+* ``whole``          -- every optimizer parameter; the published headline number
+* ``bf16_recorded``  -- the published name-based mask, kept so the reference
+  check compares like with like against the recorded bf16 figures
+* ``bf16_true``      -- the parameters that are actually bfloat16.  These differ:
+  B_bias and C_bias are float32 in the model but counted as bfloat16 by the
+  published mask, putting 73,728 fp32 coordinates (0.0395%) into the recorded
+  bf16 pool.  Only ``bf16_true`` is on a bf16 lattice, so only it may carry
+  lattice geometry.
+* ``muon_covered``   -- the 2-D hidden weights Muon actually orthogonalizes,
+  the primary comparison set because it is the only one where all three
+  conditions have the same optimizer writing the same coordinates.  Every
+  parameter in it is verified natively bfloat16, so the two issues do not
+  interact.
 
-Lattice geometry is accumulated over ``bf16`` and ``muon_covered``.  The full
+Lattice geometry is accumulated over ``bf16_true`` and ``muon_covered``.  The full
 realized step-size distribution in ULPs is kept, not a zero/nonzero split:
 Arm A found 35.88% of nonzero moves are two or more ULPs, so a two-bucket
 summary would hide exactly where an optimizer difference should appear.
@@ -32,8 +40,8 @@ import torch
 
 from geometry import LatticeAccumulator, PooledAccumulator, assert_on_lattice
 
-SUBSETS = ("whole", "bf16", "muon_covered")
-GEOMETRY_SUBSETS = ("bf16", "muon_covered")
+SUBSETS = ("whole", "bf16_recorded", "bf16_true", "muon_covered")
+GEOMETRY_SUBSETS = ("bf16_true", "muon_covered")
 
 
 class DeliveryObserver:
@@ -70,11 +78,12 @@ class DeliveryObserver:
                 assert_on_lattice(p_pre32)
 
             pooled["whole"].add(intent, delta)
-            key = "fp32" if r.native_fp32 else "bf16"
-            if key == "bf16":
-                pooled["bf16"].add(intent, delta)
+            if not r.recorded_fp32:
+                pooled["bf16_recorded"].add(intent, delta)
+            if not r.native_fp32:
+                pooled["bf16_true"].add(intent, delta)
                 if want_geometry:
-                    lattice["bf16"].add(p_pre32, intent, delta, decay)
+                    lattice["bf16_true"].add(p_pre32, intent, delta, decay)
             if r.muon_covered:
                 pooled["muon_covered"].add(intent, delta)
                 if want_geometry:
@@ -90,6 +99,8 @@ class DeliveryObserver:
                     per_tensor.append({
                         "name": r.name,
                         "dtype": "float32" if r.native_fp32 else "bfloat16",
+                        "dtype_recorded_label": (
+                            "float32" if r.recorded_fp32 else "bfloat16"),
                         "numel": r.numel,
                         "ndim": r.ndim,
                         "muon_covered": r.muon_covered,

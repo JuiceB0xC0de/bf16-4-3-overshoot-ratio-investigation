@@ -168,6 +168,13 @@ class LatticeAccumulator:
 
     def add(self, p_pre: torch.Tensor, intent: torch.Tensor,
             realized: torch.Tensor, decay: torch.Tensor | None = None) -> None:
+        # Parameters are 1-D to 3-D; every statistic here is over coordinates,
+        # and bincount takes 1-D input only, so flatten up front.
+        p_pre = p_pre.reshape(-1)
+        intent = intent.reshape(-1)
+        realized = realized.reshape(-1)
+        if decay is not None:
+            decay = decay.reshape(-1)
         ulp = bf16_ulp(p_pre)
         x = torch.abs(intent) / ulp
         signed_steps = torch.round(realized / ulp)

@@ -258,12 +258,52 @@ def test_bucketize_matches_numpy_histogram():
           f"n_on_edge={len(edges) - 1}, total={int(mine.sum())}")
 
 
+
+def test_multidimensional_parameters():
+    """Real parameters are 1-D, 2-D and 3-D; every statistic is over coordinates.
+
+    The accumulator must give the same answer for a tensor and its flattened
+    view, and must not fail on a non-1-D input.  ``torch.bincount`` takes 1-D
+    only, which is exactly the kind of shape bug a 1-D-only test misses.
+    """
+    shapes = [(3432, 768), (24, 1, 128), (768,), (768, 1536)]
+    g = torch.Generator().manual_seed(11)
+    flat_p, flat_i, flat_r = [], [], []
+    shaped = LatticeAccumulator(torch.device("cpu"))
+    pooled_shaped = PooledAccumulator()
+    for shape in shapes:
+        n = int(np.prod(shape))
+        p = sample_bf16(n, hash(shape) % 10_000).reshape(shape)
+        p = torch.where(p == 0, torch.full_like(p, 0.01), p)
+        ulp = bf16_ulp(p)
+        x = torch.exp(torch.empty(shape).uniform_(-5.0, 1.5, generator=g))
+        intent = x * ulp * torch.where(torch.rand(shape, generator=g) < 0.5, -1.0, 1.0)
+        realized = (p + intent).to(torch.bfloat16).to(torch.float32) - p
+        shaped.add(p, intent, realized)
+        pooled_shaped.add(intent, realized)
+        flat_p.append(p.reshape(-1)); flat_i.append(intent.reshape(-1))
+        flat_r.append(realized.reshape(-1))
+
+    flat = LatticeAccumulator(torch.device("cpu"))
+    flat.add(torch.cat(flat_p), torch.cat(flat_i), torch.cat(flat_r))
+    a, b = shaped.result(), flat.result()
+    worst = max(abs(a[k] - b[k]) / max(abs(b[k]), 1e-30)
+                for k in ("ratio_from_realized_steps", "ratio_predicted_from_x",
+                          "mean_x_above_half", "zero_step_fraction",
+                          "abs_step_ge_2_share_of_moved"))
+    check("multi-dimensional parameters == flattened equivalent", worst < 1e-12,
+          f"worst rel diff {worst:.3e}, n={a['n_coords']}")
+    check("step_hist identical across shapes",
+          a["step_hist"]["counts"] == b["step_hist"]["counts"])
+
+
 if __name__ == "__main__":
     print("geometry port vs Arm A original")
     for fn in (test_ulp_matches_arm_a, test_ulp_is_the_real_bf16_spacing,
                test_on_lattice, test_pooled_matches_pair_rule,
                test_lattice_matches_arm_a, test_uniform_x_closed_form,
                test_bucketize_matches_numpy_histogram,
+               test_multidimensional_parameters,
                test_accumulation_is_order_invariant):
         fn()
     print(f"\n{len(FAILURES)} failure(s)" + (f": {FAILURES}" if FAILURES else ""))
