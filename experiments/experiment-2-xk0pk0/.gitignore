@@ -25,3 +25,7 @@ __pycache__/
 # synthetic fixture output used only to exercise src/figures.py
 scratch/fixture_out/
 scratch/fixture_results/
+
+# Full 5 MB per-run records: durable copies live in the artifact store; these are
+# local working copies pulled for analysis.
+scratch/records/
