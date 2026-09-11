@@ -1,0 +1,9 @@
+experiment: 1
+eid: "exp_01m1rbjk2pe84tfg8xj7qnhtg0"
+title: "Arm A: is the 4/3 the BF16 writer, or the update distribution?"
+date: "2026-09-05"
+status: in-progress
+data: {}
+outputs: {}
+results: {}
+slurm_jobs: []
