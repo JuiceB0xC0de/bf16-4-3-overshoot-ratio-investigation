@@ -1,0 +1,47 @@
+{
+ "tokenizer_id": "NousResearch/Meta-Llama-3.1-8B",
+ "epoch_len": 7473,
+ "row99_len": 230,
+ "row99_len_expected": 230,
+ "row99_len_ok": true,
+ "recorded_counts_ok": true,
+ "mismatched": {},
+ "row99_first8": [
+  128000,
+  14924,
+  512,
+  38,
+  607,
+  706,
+  1403,
+  7795
+ ],
+ "row99_last4": [
+  827,
+  220,
+  18,
+  128001
+ ],
+ "n_steps": 300,
+ "len_min": 73,
+ "len_median": 162.5,
+ "len_max": 367,
+ "n_truncated_at_max_tokens": 0,
+ "total_supervised_tokens": 50232,
+ "template": "Question:\n{q}\n\nAnswer:\n{a}",
+ "template_rendered_example_row0": "Question:\nNatalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?\n\nAnswer:\nNatalia sold 48/2 = <<48/2=24>>24 clips in May.\nNatalia sold 48+24 = <<48+24=72>>72 clips altogether in April and May.\n#### 72",
+ "recorded_token_counts_checked": {
+  "655": 127,
+  "656": 85,
+  "657": 168,
+  "658": 192,
+  "1679": 118,
+  "1680": 72,
+  "1681": 133,
+  "7387": 161
+ },
+ "max_tokens": 512,
+ "source_of_truth": "token_ids read from camera-3 bundle observed-runs/20260810T091311Z/e1_s000100 of dataset juiceb0xc0de/mmb3-slt-6xcam-results",
+ "row99_token_ids_exact_match": true,
+ "tokenizer_mirror_note": "meta-llama/Llama-3.1-8B is manually gated; the ungated NousResearch mirror was checked to give byte-identical ids for row 99"
+}

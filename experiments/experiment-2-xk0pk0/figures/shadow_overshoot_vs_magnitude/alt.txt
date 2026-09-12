@@ -1,0 +1,1 @@
+Pooled overshoot against intended update norm on a log x axis for AdamW, SGD with momentum, and Muon, measured on one shared trajectory.

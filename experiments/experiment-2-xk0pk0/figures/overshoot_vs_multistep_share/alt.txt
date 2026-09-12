@@ -1,0 +1,1 @@
+Scatter of pooled overshoot against the share of delivered squared norm carried by moves of two or more lattice steps, for every run and every shadow magnitude, with the algebraic identity drawn through them.

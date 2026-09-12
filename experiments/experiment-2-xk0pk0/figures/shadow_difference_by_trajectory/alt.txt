@@ -1,0 +1,1 @@
+Paired overshoot difference from AdamW at matched update magnitude, shown separately for each host trajectory, against a zero line.

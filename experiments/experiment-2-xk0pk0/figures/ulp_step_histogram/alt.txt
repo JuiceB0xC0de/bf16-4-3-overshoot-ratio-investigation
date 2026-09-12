@@ -1,0 +1,1 @@
+Share of coordinates moving zero, one, two or more lattice steps, grouped by optimizer, on a log share axis.

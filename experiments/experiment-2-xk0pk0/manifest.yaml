@@ -1,0 +1,104 @@
+experiment: 2
+eid: "exp_01m1rc45nwevdtjx8af5xk0pk0"
+title: "Arm B: is 4/3 an AdamW number, or does any optimizer get it?"
+date: "2026-09-05"
+status: complete
+
+data:
+  model: "state-spaces/mamba3-siso-187m@6792c27c00f3bb41506db1066dcd1c51bb0f4b02"
+  dataset: "openai/gsm8k main/train, rows in recorded order, batch 1, max 512 tokens"
+  prompt_template: |
+    <|begin_of_text|>Question:\n{question}\n\nAnswer:\n{answer}<|end_of_text|>
+  prompt_provenance: >-
+    Recovered from the recorded captures' stored token ids, not guessed;
+    re-encoding row 99 reproduces the recorded 230 ids exactly.
+    See results/data_pipeline.json.
+  seed: 1234
+  image: "docker.io/juiceboxdocks/mamba3-atlas:1cde57a2d4981702add8c542ec75c7b2282b2ce3"
+  reference_run: "20260810T091311Z (reference/capture_summary_clip1.jsonl)"
+
+outputs:
+  artifact_root: "artifact://juiceb0xc0de-15787e/experiments/exp_01m1rc45nwevdtjx8af5xk0pk0/"
+  per_run_records: "armb_<condition>_<label>.json (~5.3 MB each) and .rows.jsonl"
+  job_logs: "log_adamw_native.txt, log_scale_matched_v2.txt, log_muon_lrscan.txt"
+  preflight: "preflight_adamw.json, preflight_interactive.json"
+  joined_tables:
+    - results/by_condition.json
+    - results/by_condition.csv
+    - results/shadow_curve.json
+    - results/step_histograms.json
+    - results/mechanism.json
+    - results/data_pipeline.json
+  report_contract:
+    - report_summary.json
+    - claims_manifest.json
+  figures: "figures/<name>/ (interactive html, plot-ready data.json, alt.txt); figures/figure_checks.json records the read-back verification"
+  wandb_project: "mamba3-arm-b-optimizer-overshoot"
+
+results:
+  question: >-
+    Does the pooled overshoot ||r||^2/<i,r> change when a different optimizer
+    produces the intended update?
+  answer: >-
+    Neither framing survives. Muon reproduces AdamW's overshoot to within
+    0.0031 at matched update magnitude on a shared trajectory, so 4/3 is not an
+    AdamW number; SGD with momentum sits 0.2452 below it under identical
+    gradients and identical bfloat16 parameters, so it is not a property of the
+    writer alone either.
+  reference_check:
+    whole_overshoot: "1.326752 observed vs 1.325717 recorded, gap 0.001035, tol 0.02"
+    bf16_zero_fraction: "0.938704 vs 0.938561, gap 0.000143"
+    clipping: "fired on 100/100 steps"
+    shadow_self_check: "300 steps, worst gap 0.002811"
+  shadow_at_adamw_magnitude:
+    adamw: 1.3241
+    muon: 1.3208
+    sgd: 1.0792
+    muon_minus_adamw: "-0.003131 (251/295 steps negative)"
+    sgd_minus_adamw: "-0.24521 (295/295 steps negative)"
+    replication: "both differences hold on all 9 host trajectories, every interval excludes 0"
+  real_runs_at_matched_magnitude:
+    adamw_native: {lr: 2.0e-4, intent_norm_ratio: 1.000, overshoot: 1.3246}
+    muon_scale_matched_v2: {lr: 0.0014736, intent_norm_ratio: 0.9989, overshoot: 1.3200}
+    sgd_scale_matched_v2: {lr: 0.037930, intent_norm_ratio: 0.9983, overshoot: 1.1702}
+  mechanism: >-
+    The bfloat16 write rounds to nearest, so a coordinate whose intended update
+    is x lattice spacings moves round(x). Predicting each run's overshoot from
+    its measured distribution of x alone reproduces the measurement (median
+    absolute gap 0.0013, worst 0.017 over nine runs). 4/3 is what that
+    prediction returns when x is uniform on the unit interval.
+  not_scale_invariant: >-
+    AdamW's own overshoot falls from 1.3323 (multiplier 1/32) to 1.1661
+    (multiplier 8) across the shadow magnitude sweep.
+  trainability: >-
+    Muon at its reference default 0.02 and at 0.01 does not reduce loss over
+    300 steps; 0.005 is the largest scanned rate that trains.
+
+slurm_jobs:
+  - id: "471369691002"
+    what: "sgd scale_matched_v2 (lr 0.037930) then muon scale_matched_v2 (lr 0.0014736), 300 steps each"
+    elapsed: "13m"
+    log: "log_scale_matched_v2.txt"
+  - id: "568547996908"
+    what: "muon lr 0.005 then muon lr 0.01, 300 steps each"
+    elapsed: "15m"
+    log: "log_muon_lrscan.txt"
+  - id: "480201742355"
+    what: "sgd native (lr 0.01) and sgd scale_matched (lr 0.0583), 300 steps each"
+    log: "in-record; superseded rerun 580811396416 was stopped as redundant"
+  - id: "earlier"
+    what: >-
+      adamw native (reference check), muon native (lr 0.02) and muon
+      scale_matched (lr 0.00243), plus the interactive preflight and probe jobs
+    log: "log_adamw_native.txt, preflight_adamw.json"
+
+notes:
+  primary_comparison: >-
+    The Muon-covered parameter set (the 2-D weights Muon actually
+    orthogonalizes); the whole-model number is reported alongside because
+    whole-model Muon mixes two writers by construction.
+  bootstrap: "2000 draws resampling whole steps; first 5 steps dropped as AdamW bias-correction transients"
+  dtype_mask: >-
+    The project's published name-based fp32 mask misses 24 tensors
+    (73,728 coordinates, 0.0395% of the pool). Both masks are computed and the
+    difference moves no comparison.

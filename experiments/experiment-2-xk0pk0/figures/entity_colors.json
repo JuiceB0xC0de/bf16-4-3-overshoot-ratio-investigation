@@ -1,0 +1,13 @@
+{
+ "AdamW": "#C4650D",
+ "Muon": "#4E728A",
+ "SGD": "#2E6E4E",
+ "AdamW, native": "#C4650D",
+ "Muon, lr scan": "#4E728A",
+ "Muon, native": "#4E728A",
+ "Muon, scale-matched, probe": "#8099AB",
+ "Muon, scale-matched": "#8099AB",
+ "SGD, native": "#2E6E4E",
+ "SGD, scale-matched, probe": "#699780",
+ "SGD, scale-matched": "#699780"
+}

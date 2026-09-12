@@ -1,0 +1,34 @@
+# Keeps heavy bytes out of git (and future worktree snapshots) — durable heavy
+# outputs belong in $SILICO_EXPERIMENT_ARTIFACTS_DIR, not the worktree.
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.pkl
+*.bin
+*.onnx
+wandb/
+tensorboard/
+*.tfevents.*
+# SLURM job logs (SBATCH_OUTPUT defaults here) — read on disk, not a deliverable.
+slurm-logs/
+# Python build noise — never a deliverable, only clutters the changeset.
+__pycache__/
+*.pyc
+# Stranded _atomic_write temps (name.<pid>.<hex>.tmp) from a crashed write.
+*.*.*.tmp
+
+# synthetic fixture output used only to exercise src/figures.py
+scratch/fixture_out/
+scratch/fixture_results/
+
+# Full 5 MB per-run records: durable copies live in the artifact store; these are
+# local working copies pulled for analysis.
+scratch/records/
+
+# One-off PNG re-renders used only to eyeball figures at reading width.
+scratch/review_*.png

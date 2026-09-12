@@ -1,0 +1,94 @@
+[
+ {
+  "figure": "overshoot_by_condition",
+  "n_series": 4,
+  "points": 10,
+  "finite_y": 9,
+  "names": [
+   "SGD",
+   "Muon",
+   "AdamW",
+   "did not train"
+  ]
+ },
+ {
+  "figure": "runs_overshoot_vs_magnitude",
+  "n_series": 3,
+  "points": 9,
+  "finite_y": 18,
+  "names": [
+   "SGD",
+   "Muon",
+   "AdamW"
+  ]
+ },
+ {
+  "figure": "shadow_overshoot_vs_magnitude",
+  "n_series": 3,
+  "points": 27,
+  "finite_y": 54,
+  "names": [
+   "SGD",
+   "Muon",
+   "AdamW"
+  ]
+ },
+ {
+  "figure": "shadow_overshoot_vs_delivery",
+  "n_series": 3,
+  "points": 27,
+  "finite_y": 54,
+  "names": [
+   "SGD",
+   "Muon",
+   "AdamW"
+  ]
+ },
+ {
+  "figure": "shadow_difference_by_trajectory",
+  "n_series": 2,
+  "points": 18,
+  "finite_y": 18,
+  "names": [
+   "SGD \u2212 AdamW",
+   "Muon \u2212 AdamW"
+  ]
+ },
+ {
+  "figure": "ulp_step_histogram",
+  "n_series": 5,
+  "points": 40,
+  "finite_y": 40,
+  "names": [
+   "AdamW, native",
+   "Muon, scale-matched",
+   "SGD, scale-matched",
+   "Muon, lr scan",
+   "SGD, native"
+  ]
+ },
+ {
+  "figure": "overshoot_vs_multistep_share",
+  "n_series": 3,
+  "points": 180,
+  "finite_y": 360,
+  "names": [
+   "SGD",
+   "Muon",
+   "AdamW"
+  ]
+ },
+ {
+  "figure": "x_distribution",
+  "n_series": 5,
+  "points": 3250,
+  "finite_y": 6500,
+  "names": [
+   "AdamW, native",
+   "Muon, scale-matched",
+   "SGD, scale-matched",
+   "Muon, lr scan",
+   "SGD, native"
+  ]
+ }
+]

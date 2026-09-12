@@ -1,0 +1,948 @@
+{
+ "title": "Is 4/3 an AdamW number, or does any optimizer get it?",
+ "headline": "Neither. Muon reproduces AdamW's pooled overshoot to within 0.0031 at exactly matched update magnitude, so the number is not an AdamW pathology; SGD with momentum sits 0.2452 below it under identical gradients and identical parameters in the shadow control's decay-free rule, and 0.1544 below in the real run that carries decoupled decay, so it is not a property of the bfloat16 writer alone either. What the statistic reads out is where the update sits relative to the local lattice spacing: under a round-to-nearest model of the write, that distribution alone reproduces every run, and 4/3 is what the model returns for a broadly spread distribution of small updates rather than a constant of the writer.",
+ "assessment": "signal",
+ "decision_rule": "Pre-registered: the AdamW replay had to reproduce the recorded step-100 overshoot within 0.02 of 1.325717, the bf16 zero fraction within 0.02 of 0.938561, and clipping on every step, or the reimplemented instrument measures nothing and the other conditions are uninterpretable. All three held. The comparison itself is the pooled overshoot on the Muon-covered parameter set, with the whole-model number reported alongside.",
+ "methods": [
+  "300 optimizer steps per condition from state-spaces/mamba3-siso-187m at revision 6792c27c00f3bb41506db1066dcd1c51bb0f4b02, over openai/gsm8k main/train rows in recorded order, batch 1, gradient clipping at 1.0, seed 1234, in the project's own published image.",
+  "The prompt format and loss mask were recovered from the recorded captures' stored token ids rather than guessed; re-encoding row 99 reproduces the recorded 230 token ids exactly.",
+  "A read-only observer snapshots parameters before each step, computes each optimizer's own fp32 intended update, lets the real step run untouched, and subtracts. All conditions use the identical pair of in-place writes so the write path is a constant.",
+  "Shadow control: on each run's own trajectory, all three update rules are fed the identical post-clip gradients and their intents are written into the identical bfloat16 parameters at nine magnitudes from 1/32 to 8 times the host's own median. It matches magnitude exactly and shares the trajectory. The shadow omits the decoupled weight-decay write, so running a host's own rule through it at multiplier 1 reconstructs that host up to the decay: within 0.003978 on the AdamW host and the five Muon hosts, where the decay write is at most 0.051 lattice spacings, and 0.05431 to 0.1186 low on the three SGD hosts, where it reaches 0.1487.",
+  "Bootstrap intervals resample whole steps (2000 draws), because consecutive steps of one run are not independent in any other sense. The first 5 steps are dropped from every table as AdamW bias-correction transients."
+ ],
+ "results": [
+  {
+   "id": "ref_overshoot",
+   "claim": "The AdamW replay reproduces the recorded step-100 whole-model overshoot to within 0.001035 against a 0.02 tolerance.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[adamw_native].reference_check.checks.whole_overshoot",
+   "value": {
+    "observed": 1.3268,
+    "recorded": 1.3257,
+    "abs_gap": 0.001035,
+    "tol": 0.02
+   }
+  },
+  {
+   "id": "ref_zero_fraction",
+   "claim": "The AdamW replay reproduces the recorded step-100 bf16 zero fraction to within 0.000143.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[adamw_native].reference_check.checks.bf16_zero_fraction",
+   "value": {
+    "observed": 0.9387036,
+    "recorded": 0.9385609,
+    "abs_gap": 0.0001427
+   }
+  },
+  {
+   "id": "ref_clip",
+   "claim": "Gradient clipping fired on every step of the 100-step reference window, as the recorded run did.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[adamw_native].clip_fired_first_100",
+   "value": 100
+  },
+  {
+   "id": "shadow_self_check",
+   "claim": "On the AdamW host, the shadow's AdamW reconstruction reproduces the host's own measured overshoot on all 300 steps, worst gap 0.002811. The stored check always compares the shadow's AdamW rule against the host, so it is meaningful only on this row and is recorded as failing on the other eight, where it compares mismatched rules.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[adamw_native].shadow_self_check",
+   "value": {
+    "n_steps": 300,
+    "max_abs_gap": 0.002811,
+    "median_abs_gap": 0.0006113,
+    "all_ok": true
+   }
+  },
+  {
+   "id": "shadow_reconstruction_per_host",
+   "claim": "Running each host's own rule through the shadow at multiplier 1 matches that host's intended-update norm to six figures, so the only remaining difference is the decoupled weight decay the shadow omits. The reconstruction lands within 0.003978 on the AdamW host and the five Muon hosts, and 0.05431 to 0.1186 low on the three SGD hosts, whose decay write is 0.0255 to 0.1487 lattice spacings rather than AdamW's 0.00051.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json and experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "sources[*].curve[host_rule] at multiplier 1 vs rows[*].muon_covered_overshoot",
+   "value": {
+    "adamw_native": {
+     "host_rule": "adamw",
+     "measured": 1.3246,
+     "shadow_same_rule_at_multiplier_1": 1.3241,
+     "gap": -0.000573,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.00051
+    },
+    "muon_lr0.005": {
+     "host_rule": "muon",
+     "measured": 1.2556,
+     "shadow_same_rule_at_multiplier_1": 1.2585,
+     "gap": 0.002848,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.01275
+    },
+    "muon_lr0.01": {
+     "host_rule": "muon",
+     "measured": 1.1744,
+     "shadow_same_rule_at_multiplier_1": 1.1712,
+     "gap": -0.00319,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.0255
+    },
+    "muon_native": {
+     "host_rule": "muon",
+     "measured": 1.0924,
+     "shadow_same_rule_at_multiplier_1": 1.0884,
+     "gap": -0.003978,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.051
+    },
+    "muon_scale_matched": {
+     "host_rule": "muon",
+     "measured": 1.3058,
+     "shadow_same_rule_at_multiplier_1": 1.305,
+     "gap": -0.0008549,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.006196
+    },
+    "muon_scale_matched_v2": {
+     "host_rule": "muon",
+     "measured": 1.32,
+     "shadow_same_rule_at_multiplier_1": 1.3192,
+     "gap": -0.0008701,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.003758
+    },
+    "sgd_native": {
+     "host_rule": "sgd",
+     "measured": 1.2368,
+     "shadow_same_rule_at_multiplier_1": 1.1182,
+     "gap": -0.1186,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.0255
+    },
+    "sgd_scale_matched": {
+     "host_rule": "sgd",
+     "measured": 1.1496,
+     "shadow_same_rule_at_multiplier_1": 1.0953,
+     "gap": -0.05431,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.1487
+    },
+    "sgd_scale_matched_v2": {
+     "host_rule": "sgd",
+     "measured": 1.1702,
+     "shadow_same_rule_at_multiplier_1": 1.0961,
+     "gap": -0.07408,
+     "intent_norm_ratio": 1.0,
+     "decay_x_max": 0.09672
+    }
+   }
+  },
+  {
+   "id": "sgd_deficit_with_decay",
+   "claim": "The shadow's SGD rule omits weight decay, so its 0.2452 deficit is the decay-free rule's. The real SGD run carrying its decoupled decay at 0.9983 of AdamW's update norm sits 0.1544 below AdamW. Both put SGD well below, on different trajectories in the second case.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[sgd_scale_matched_v2].muon_covered_overshoot minus rows[adamw_native].muon_covered_overshoot",
+   "value": {
+    "sgd_overshoot": 1.1702,
+    "adamw_overshoot": 1.3246,
+    "difference": -0.1544,
+    "shadow_decay_free_difference": -0.24521,
+    "sgd_intent_norm_ratio_vs_adamw": 0.9983
+   }
+  },
+  {
+   "id": "shadow_at_matched_adamw",
+   "claim": "On AdamW's trajectory at AdamW's own median update magnitude, adamw gives pooled overshoot 1.324.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.at_adamw_magnitude.adamw",
+   "value": {
+    "point": 1.3241,
+    "lo": 1.3239,
+    "hi": 1.3241,
+    "n_steps": 295
+   }
+  },
+  {
+   "id": "shadow_at_matched_muon",
+   "claim": "On AdamW's trajectory at AdamW's own median update magnitude, muon gives pooled overshoot 1.321.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.at_adamw_magnitude.muon",
+   "value": {
+    "point": 1.3208,
+    "lo": 1.3204,
+    "hi": 1.3213,
+    "n_steps": 295
+   }
+  },
+  {
+   "id": "shadow_at_matched_sgd",
+   "claim": "On AdamW's trajectory at AdamW's own median update magnitude, sgd gives pooled overshoot 1.079.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.at_adamw_magnitude.sgd",
+   "value": {
+    "point": 1.0792,
+    "lo": 1.0779,
+    "hi": 1.0801,
+    "n_steps": 295
+   }
+  },
+  {
+   "id": "shadow_paired_muon",
+   "claim": "Paired per-step difference from AdamW at matched magnitude for muon: -0.003126.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.paired_difference_at_adamw_magnitude.muon_minus_adamw",
+   "value": {
+    "point": -0.0031256,
+    "lo": -0.0035353,
+    "hi": -0.0025515,
+    "n_steps_negative": 251,
+    "n_steps": 295
+   }
+  },
+  {
+   "id": "shadow_across_muon",
+   "claim": "Across all nine host trajectories the Muon minus AdamW difference stays within 0.01394 in absolute value. Eight are negative and one, on the diverged Muon-at-0.02 host, is +0.003136, so what replicates is the small size of the difference rather than its sign.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "across_trajectories.muon_minus_adamw",
+   "value": {
+    "min_point": -0.013937,
+    "max_point": 0.0031361,
+    "max_abs_point": 0.013937,
+    "n_trajectories": 9,
+    "n_negative": 8,
+    "n_intervals_excluding_zero": 9,
+    "per_trajectory": {
+     "adamw_native": {
+      "point": -0.0031256,
+      "trains": "trains"
+     },
+     "muon_lr0.005": {
+      "point": -0.013937,
+      "trains": "trains"
+     },
+     "muon_lr0.01": {
+      "point": -0.013338,
+      "trains": "does_not_train"
+     },
+     "muon_native": {
+      "point": 0.0031361,
+      "trains": "does_not_train"
+     },
+     "muon_scale_matched": {
+      "point": -0.010778,
+      "trains": "trains"
+     },
+     "muon_scale_matched_v2": {
+      "point": -0.0069353,
+      "trains": "trains"
+     },
+     "sgd_native": {
+      "point": -0.0014976,
+      "trains": "trains"
+     },
+     "sgd_scale_matched": {
+      "point": -0.01118,
+      "trains": "trains"
+     },
+     "sgd_scale_matched_v2": {
+      "point": -0.0058453,
+      "trains": "trains"
+     }
+    }
+   }
+  },
+  {
+   "id": "shadow_paired_sgd",
+   "claim": "Paired per-step difference from AdamW at matched magnitude for sgd: -0.2452.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.paired_difference_at_adamw_magnitude.sgd_minus_adamw",
+   "value": {
+    "point": -0.24521,
+    "lo": -0.24624,
+    "hi": -0.24398,
+    "n_steps_negative": 295,
+    "n_steps": 295
+   }
+  },
+  {
+   "id": "shadow_across_sgd",
+   "claim": "The SGD minus AdamW difference is negative on all nine host trajectories. Its size tracks model state: 0.2115 to 0.2481 below on the seven hosts whose loss fell, and 0.1444 and 0.06653 below on the two diverged Muon hosts.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "across_trajectories.sgd_minus_adamw",
+   "value": {
+    "min_point": -0.24813,
+    "max_point": -0.066535,
+    "max_abs_point": 0.24813,
+    "n_trajectories": 9,
+    "n_negative": 9,
+    "n_intervals_excluding_zero": 9,
+    "per_trajectory": {
+     "adamw_native": {
+      "point": -0.24521,
+      "trains": "trains"
+     },
+     "muon_lr0.005": {
+      "point": -0.21147,
+      "trains": "trains"
+     },
+     "muon_lr0.01": {
+      "point": -0.14442,
+      "trains": "does_not_train"
+     },
+     "muon_native": {
+      "point": -0.066535,
+      "trains": "does_not_train"
+     },
+     "muon_scale_matched": {
+      "point": -0.2403,
+      "trains": "trains"
+     },
+     "muon_scale_matched_v2": {
+      "point": -0.24813,
+      "trains": "trains"
+     },
+     "sgd_native": {
+      "point": -0.21325,
+      "trains": "trains"
+     },
+     "sgd_scale_matched": {
+      "point": -0.22327,
+      "trains": "trains"
+     },
+     "sgd_scale_matched_v2": {
+      "point": -0.22844,
+      "trains": "trains"
+     }
+    }
+   }
+  },
+  {
+   "id": "matched_delivery",
+   "claim": "At a matched fraction of coordinates delivered, SGD stays about a quarter below AdamW while Muon stays within 0.022.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.matched_delivery.at",
+   "value": {
+    "0.03": {
+     "adamw": 1.3305,
+     "muon": 1.3286,
+     "sgd": 1.085,
+     "muon_minus_adamw": -0.0018411,
+     "sgd_minus_adamw": -0.24546
+    },
+    "0.05": {
+     "adamw": 1.3281,
+     "muon": 1.3252,
+     "sgd": 1.0792,
+     "muon_minus_adamw": -0.0028479,
+     "sgd_minus_adamw": -0.24883
+    },
+    "0.09": {
+     "adamw": 1.3242,
+     "muon": 1.3202,
+     "sgd": 1.0753,
+     "muon_minus_adamw": -0.0039904,
+     "sgd_minus_adamw": -0.24889
+    },
+    "0.15": {
+     "adamw": 1.3135,
+     "muon": 1.302,
+     "sgd": 1.068,
+     "muon_minus_adamw": -0.011413,
+     "sgd_minus_adamw": -0.24544
+    },
+    "0.25": {
+     "adamw": 1.2813,
+     "muon": 1.2595,
+     "sgd": 1.0552,
+     "muon_minus_adamw": -0.021739,
+     "sgd_minus_adamw": -0.22606
+    }
+   }
+  },
+  {
+   "id": "not_scale_invariant",
+   "claim": "AdamW's own overshoot falls from the small-update limit to the largest magnitude swept, so 4/3 is a limit rather than a constant.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.curve.adamw[0] and [-1]",
+   "value": {
+    "small_multiplier": 0.03125,
+    "small_overshoot": 1.3323,
+    "small_zero_fraction": 0.9971,
+    "large_multiplier": 8.0,
+    "large_overshoot": 1.1661,
+    "large_zero_fraction": 0.4687,
+    "four_thirds": 1.3333
+   }
+  },
+  {
+   "id": "four_thirds_needs_a_broad_distribution",
+   "claim": "4/3 is the small-update limit for a broadly spread x distribution, not for every rule. AdamW and Muon flatten at 1.3323 and 1.3331 at 1/32 of AdamW's magnitude, while decay-free SGD tops out at 1.2368 and never approaches 4/3 anywhere in the 256-fold sweep.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+   "key": "sources.adamw_native.curve",
+   "value": {
+    "four_thirds": 1.3333,
+    "overshoot_by_multiplier": {
+     "adamw": {
+      "0.03125": 1.3323,
+      "0.0625": 1.3323,
+      "0.125": 1.3323,
+      "0.25": 1.3316,
+      "0.5": 1.3286,
+      "1": 1.3241,
+      "2": 1.3098,
+      "4": 1.2583,
+      "8": 1.1661
+     },
+     "muon": {
+      "0.03125": 1.3331,
+      "0.0625": 1.3329,
+      "0.125": 1.3325,
+      "0.25": 1.3304,
+      "0.5": 1.3261,
+      "1": 1.3208,
+      "2": 1.2974,
+      "4": 1.2374,
+      "8": 1.1465
+     },
+     "sgd": {
+      "0.03125": 1.2368,
+      "0.0625": 1.1884,
+      "0.125": 1.1398,
+      "0.25": 1.1043,
+      "0.5": 1.0866,
+      "1": 1.0792,
+      "2": 1.0749,
+      "4": 1.0656,
+      "8": 1.0495
+     }
+    }
+   }
+  },
+  {
+   "id": "x_spread_by_rule",
+   "claim": "AdamW and Muon spread their intended updates over roughly two decades of lattice spacing, a 179 to 222 fold ratio between the 5th and 95th percentile of x, while SGD's spread is 2.6 to 3.1 fold.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "[*].x_quantiles_from_hist",
+   "value": {
+    "adamw_native": {
+     "x_p05": 0.005135,
+     "x_p95": 0.9182,
+     "p95_over_p05": 178.8
+    },
+    "muon_lr0.005": {
+     "x_p05": 0.01457,
+     "x_p95": 2.979,
+     "p95_over_p05": 204.4
+    },
+    "muon_lr0.01": {
+     "x_p05": 0.02621,
+     "x_p95": 5.494,
+     "p95_over_p05": 209.6
+    },
+    "muon_native": {
+     "x_p05": 0.03884,
+     "x_p95": 8.62,
+     "p95_over_p05": 221.9
+    },
+    "muon_scale_matched": {
+     "x_p05": 0.007239,
+     "x_p95": 1.465,
+     "p95_over_p05": 202.4
+    },
+    "muon_scale_matched_v2": {
+     "x_p05": 0.004401,
+     "x_p95": 0.8835,
+     "p95_over_p05": 200.8
+    },
+    "sgd_native": {
+     "x_p05": 0.01042,
+     "x_p95": 0.03278,
+     "p95_over_p05": 3.146
+    },
+    "sgd_scale_matched": {
+     "x_p05": 0.06253,
+     "x_p95": 0.1834,
+     "p95_over_p05": 2.933
+    },
+    "sgd_scale_matched_v2": {
+     "x_p05": 0.04282,
+     "x_p95": 0.1123,
+     "p95_over_p05": 2.623
+    }
+   }
+  },
+  {
+   "id": "run_adamw_native",
+   "claim": "300-step run adamw_native at lr 0.0002.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[adamw_native]",
+   "value": {
+    "lr": 0.0002,
+    "overshoot_muon_covered": 1.3246,
+    "lo": 1.3245,
+    "hi": 1.3247,
+    "overshoot_whole": 1.3221,
+    "intent_norm": 0.4299,
+    "loss_last5": 1.822,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 0.5693,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_lr0.005",
+   "claim": "300-step run muon_lr0.005 at lr 0.005.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_lr0.005]",
+   "value": {
+    "lr": 0.005,
+    "overshoot_muon_covered": 1.2556,
+    "lo": 1.2555,
+    "hi": 1.2557,
+    "overshoot_whole": 1.2577,
+    "intent_norm": 1.456,
+    "loss_last5": 2.185,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 0.3824,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_lr0.01",
+   "claim": "300-step run muon_lr0.01 at lr 0.01.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_lr0.01]",
+   "value": {
+    "lr": 0.01,
+    "overshoot_muon_covered": 1.1744,
+    "lo": 1.1736,
+    "hi": 1.1749,
+    "overshoot_whole": 1.1759,
+    "intent_norm": 2.879,
+    "loss_last5": 2.765,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "does_not_train",
+    "loss_drop": -0.2991,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_native",
+   "claim": "300-step run muon_native at lr 0.02.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_native]",
+   "value": {
+    "lr": 0.02,
+    "overshoot_muon_covered": 1.0924,
+    "lo": 1.0903,
+    "hi": 1.0929,
+    "overshoot_whole": 1.093,
+    "intent_norm": 5.542,
+    "loss_last5": 3.546,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "does_not_train",
+    "loss_drop": -0.8751,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_scale_matched",
+   "claim": "300-step run muon_scale_matched at lr 0.00243.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_scale_matched]",
+   "value": {
+    "lr": 0.00243,
+    "overshoot_muon_covered": 1.3058,
+    "lo": 1.3058,
+    "hi": 1.3059,
+    "overshoot_whole": 1.3082,
+    "intent_norm": 0.7089,
+    "loss_last5": 1.835,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 0.875,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_muon_scale_matched_v2",
+   "claim": "300-step run muon_scale_matched_v2 at lr 0.0014736.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_scale_matched_v2]",
+   "value": {
+    "lr": 0.0014736,
+    "overshoot_muon_covered": 1.32,
+    "lo": 1.32,
+    "hi": 1.3201,
+    "overshoot_whole": 1.3224,
+    "intent_norm": 0.4294,
+    "loss_last5": 1.807,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 1.039,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_sgd_native",
+   "claim": "300-step run sgd_native at lr 0.01.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[sgd_native]",
+   "value": {
+    "lr": 0.01,
+    "overshoot_muon_covered": 1.2368,
+    "lo": 1.2349,
+    "hi": 1.2384,
+    "overshoot_whole": 1.0598,
+    "intent_norm": 0.1136,
+    "loss_last5": 2.138,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 0.7952,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_sgd_scale_matched",
+   "claim": "300-step run sgd_scale_matched at lr 0.0583.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[sgd_scale_matched]",
+   "value": {
+    "lr": 0.0583,
+    "overshoot_muon_covered": 1.1496,
+    "lo": 1.1476,
+    "hi": 1.1508,
+    "overshoot_whole": 1.0481,
+    "intent_norm": 0.6606,
+    "loss_last5": 2.139,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 1.501,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "run_sgd_scale_matched_v2",
+   "claim": "300-step run sgd_scale_matched_v2 at lr 0.03793.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[sgd_scale_matched_v2]",
+   "value": {
+    "lr": 0.03793,
+    "overshoot_muon_covered": 1.1702,
+    "lo": 1.1683,
+    "hi": 1.1726,
+    "overshoot_whole": 1.0374,
+    "intent_norm": 0.4292,
+    "loss_last5": 1.981,
+    "clip_fired_fraction": 1,
+    "trajectory_verdict": "trains",
+    "loss_drop": 0.8933,
+    "n_steps_used": 295
+   }
+  },
+  {
+   "id": "scale_match_drift",
+   "claim": "The scale-matched multipliers set from a 20-step probe overshot AdamW's 300-step median update norm; the corrected reruns land on it.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[*].muon_covered_intent_norm",
+   "value": {
+    "adamw_median_intent_norm": 0.4299,
+    "muon_lr0.005": 3.387,
+    "muon_lr0.01": 6.697,
+    "muon_native": 12.89,
+    "muon_scale_matched": 1.649,
+    "muon_scale_matched_v2": 0.9989,
+    "sgd_native": 0.2643,
+    "sgd_scale_matched": 1.537,
+    "sgd_scale_matched_v2": 0.9983
+   }
+  },
+  {
+   "id": "matched_magnitude_runs",
+   "claim": "In the real 300-step runs held to AdamW's own update magnitude, Muon lands next to AdamW and SGD with momentum lands well below both, reproducing the shadow control's ordering on three separate trajectories.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[adamw_native|muon_scale_matched_v2|sgd_scale_matched_v2]",
+   "value": {
+    "AdamW": {
+     "lr": 0.0002,
+     "overshoot": 1.3246,
+     "lo": 1.3245,
+     "hi": 1.3247,
+     "intent_norm": 0.4299,
+     "intent_norm_ratio_vs_adamw": 1.0,
+     "minus_adamw": 0.0
+    },
+    "Muon": {
+     "lr": 0.0014736,
+     "overshoot": 1.32,
+     "lo": 1.32,
+     "hi": 1.3201,
+     "intent_norm": 0.4294,
+     "intent_norm_ratio_vs_adamw": 0.9989,
+     "minus_adamw": -0.00461
+    },
+    "SGD + momentum": {
+     "lr": 0.03793,
+     "overshoot": 1.1702,
+     "lo": 1.1683,
+     "hi": 1.1726,
+     "intent_norm": 0.4292,
+     "intent_norm_ratio_vs_adamw": 0.9983,
+     "minus_adamw": -0.154
+    }
+   }
+  },
+  {
+   "id": "sgd_smaller_step_still_lower",
+   "claim": "SGD at its own learning rate takes an update about a quarter the size of AdamW's and still sits below AdamW's overshoot, so a smaller step does not account for the gap.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[sgd_native] vs rows[adamw_native]",
+   "value": {
+    "sgd_lr": 0.01,
+    "sgd_intent_norm": 0.1136,
+    "sgd_intent_norm_ratio_vs_adamw": 0.2643,
+    "sgd_overshoot": 1.2368,
+    "adamw_overshoot": 1.3246
+   }
+  },
+  {
+   "id": "muon_lr_scan",
+   "claim": "Sweeping Muon's learning rate over a 14-fold range walks its overshoot down the same magnitude curve the shadow control traces, in real runs on five separate trajectories.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[muon_*]",
+   "value": [
+    {
+     "lr": 0.0014736,
+     "intent_norm": 0.4294,
+     "overshoot": 1.32,
+     "trajectory_verdict": "trains"
+    },
+    {
+     "lr": 0.00243,
+     "intent_norm": 0.7089,
+     "overshoot": 1.3058,
+     "trajectory_verdict": "trains"
+    },
+    {
+     "lr": 0.005,
+     "intent_norm": 1.456,
+     "overshoot": 1.2556,
+     "trajectory_verdict": "trains"
+    },
+    {
+     "lr": 0.01,
+     "intent_norm": 2.879,
+     "overshoot": 1.1744,
+     "trajectory_verdict": "does_not_train"
+    },
+    {
+     "lr": 0.02,
+     "intent_norm": 5.542,
+     "overshoot": 1.0924,
+     "trajectory_verdict": "does_not_train"
+    }
+   ]
+  },
+  {
+   "id": "predicted_from_x",
+   "claim": "Under a round-to-nearest model of the bfloat16 write, each run's measured distribution of x = |intended update| / lattice spacing reproduces its overshoot to a median 0.00132 and a worst 0.0173. Given that write model, x mediates the optimizer's effect completely, with no residual rule-identity term; the check is of the write model and its residuals, not independent cross-optimizer evidence. The two largest residuals are the two runs with the largest decay write.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/by_condition.json",
+   "key": "rows[*].muon_covered_overshoot minus rows[*].geom_muon_covered_ratio_predicted_from_x",
+   "value": {
+    "per_run_signed_gap": {
+     "adamw_native": 0.000314,
+     "muon_lr0.005": -4.09e-05,
+     "muon_lr0.01": 0.00132,
+     "muon_native": 0.00375,
+     "muon_scale_matched": 0.000694,
+     "muon_scale_matched_v2": -0.000339,
+     "sgd_native": 0.00177,
+     "sgd_scale_matched": -0.0173,
+     "sgd_scale_matched_v2": -0.00544
+    },
+    "max_abs_gap": 0.0173,
+    "median_abs_gap": 0.00132
+   }
+  },
+  {
+   "id": "xdist_adamw_native",
+   "claim": "Update-to-lattice-spacing distribution for adamw_native at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "adamw_native",
+   "value": {
+    "zero_step_fraction": 0.9094,
+    "x_median": 0.06857,
+    "x_p05": 0.005135,
+    "x_p95": 0.9182,
+    "ratio_from_realized_steps": 1.3248,
+    "ratio_predicted_from_x": 1.3243
+   }
+  },
+  {
+   "id": "xdist_muon_lr0.005",
+   "claim": "Update-to-lattice-spacing distribution for muon_lr0.005 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_lr0.005",
+   "value": {
+    "zero_step_fraction": 0.7342,
+    "x_median": 0.2082,
+    "x_p05": 0.01457,
+    "x_p95": 2.979,
+    "ratio_from_realized_steps": 1.2571,
+    "ratio_predicted_from_x": 1.2569
+   }
+  },
+  {
+   "id": "xdist_muon_lr0.01",
+   "claim": "Update-to-lattice-spacing distribution for muon_lr0.01 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_lr0.01",
+   "value": {
+    "zero_step_fraction": 0.5755,
+    "x_median": 0.3838,
+    "x_p05": 0.02621,
+    "x_p95": 5.494,
+    "ratio_from_realized_steps": 1.1794,
+    "ratio_predicted_from_x": 1.1777
+   }
+  },
+  {
+   "id": "xdist_muon_native",
+   "claim": "Update-to-lattice-spacing distribution for muon_native at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_native",
+   "value": {
+    "zero_step_fraction": 0.4498,
+    "x_median": 0.5982,
+    "x_p05": 0.03884,
+    "x_p95": 8.62,
+    "ratio_from_realized_steps": 1.1052,
+    "ratio_predicted_from_x": 1.1017
+   }
+  },
+  {
+   "id": "xdist_muon_scale_matched",
+   "claim": "Update-to-lattice-spacing distribution for muon_scale_matched at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_scale_matched",
+   "value": {
+    "zero_step_fraction": 0.8595,
+    "x_median": 0.1034,
+    "x_p05": 0.007239,
+    "x_p95": 1.465,
+    "ratio_from_realized_steps": 1.306,
+    "ratio_predicted_from_x": 1.3052
+   }
+  },
+  {
+   "id": "xdist_muon_scale_matched_v2",
+   "claim": "Update-to-lattice-spacing distribution for muon_scale_matched_v2 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "muon_scale_matched_v2",
+   "value": {
+    "zero_step_fraction": 0.9133,
+    "x_median": 0.0629,
+    "x_p05": 0.004401,
+    "x_p95": 0.8835,
+    "ratio_from_realized_steps": 1.3202,
+    "ratio_predicted_from_x": 1.3202
+   }
+  },
+  {
+   "id": "xdist_sgd_native",
+   "claim": "Update-to-lattice-spacing distribution for sgd_native at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "sgd_native",
+   "value": {
+    "zero_step_fraction": 0.9978,
+    "x_median": 0.01818,
+    "x_p05": 0.01042,
+    "x_p95": 0.03278,
+    "ratio_from_realized_steps": 1.2391,
+    "ratio_predicted_from_x": 1.2373
+   }
+  },
+  {
+   "id": "xdist_sgd_scale_matched",
+   "claim": "Update-to-lattice-spacing distribution for sgd_scale_matched at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "sgd_scale_matched",
+   "value": {
+    "zero_step_fraction": 0.9885,
+    "x_median": 0.1059,
+    "x_p05": 0.06253,
+    "x_p95": 0.1834,
+    "ratio_from_realized_steps": 1.1526,
+    "ratio_predicted_from_x": 1.1689
+   }
+  },
+  {
+   "id": "xdist_sgd_scale_matched_v2",
+   "claim": "Update-to-lattice-spacing distribution for sgd_scale_matched_v2 at step 300.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+   "key": "sgd_scale_matched_v2",
+   "value": {
+    "zero_step_fraction": 0.9936,
+    "x_median": 0.0688,
+    "x_p05": 0.04282,
+    "x_p95": 0.1123,
+    "ratio_from_realized_steps": 1.1823,
+    "ratio_predicted_from_x": 1.1873
+   }
+  },
+  {
+   "id": "mechanism_regimes",
+   "claim": "Across every run and every shadow magnitude, the one-step regime ratio and the multi-step regime ratio stay in narrow bands, so the overshoot is set by how the delivered energy splits between them.",
+   "source_file": "experiments/experiment-2-xk0pk0/results/mechanism.json",
+   "key": "one_step_ratio_range, multi_step_ratio_range",
+   "value": {
+    "n_points": 180,
+    "n_shadow_points": 135,
+    "one_step_ratio_range": [
+     1.199,
+     1.4771
+    ],
+    "multi_step_ratio_range": [
+     1.0039,
+     1.0542
+    ]
+   }
+  },
+  {
+   "id": "roster",
+   "claim": "The Muon-covered comparison set and the fp32 relabelling.",
+   "source_file": "armb_adamw_native.json",
+   "key": "roster",
+   "value": {
+    "n_params": 146,
+    "numel": 186849600,
+    "n_muon_covered_params": 48,
+    "muon_covered_numel": 88252416,
+    "n_true_fp32_params": 48,
+    "true_fp32_numel": 74304,
+    "n_recorded_fp32_params": 24,
+    "mislabelled_fp32_numel": 73728,
+    "mislabelled_share_of_recorded_bf16_pool": 0.00039458595191805765
+   }
+  }
+ ],
+ "limitations": [
+  "The six-run comparison matches magnitude through a learning rate, which puts each optimizer on its own trajectory; a difference between those rows confounds the update rule with the model state reached. The shadow control exists because of this and is the primary evidence. The two claims are reported separately.",
+  "The scale-matched learning rates were first fixed from a 20-step probe and landed at 1.649 (Muon) and 1.537 (SGD) times AdamW's 300-step median update norm rather than 1.0. Corrected reruns at 0.999 and 0.998 are the ones the matched-magnitude claim uses; the probe runs are kept in every table as extra points on the magnitude curve.",
+  "Muon at its reference default of 0.02, and at 0.01, does not reduce loss on this model over 300 steps, so those two rows are broken-training conditions and are labelled as such rather than read as operating points. The largest Muon learning rate scanned that trains is 0.005.",
+  "The magnitude sweep inside a run is a learning-rate sweep, so its points also sit on separate trajectories. It agrees with the shadow sweep, which does not have that confound, rather than standing on its own.",
+  "One model, one size, one dataset, one 300-step window. Nothing here establishes that the same numbers hold at another scale or on another architecture.",
+  "The whole-model number for Muon mixes two writers by construction, since Muon only orthogonalizes 2-D weights and 1-D and 3-D parameters fall back to AdamW. The Muon-covered set is the primary comparison for that reason.",
+  "The published dtype mask that defines the recorded bf16 pool is name-based and misses 24 fp32 tensors (73,728 coordinates, 0.0395% of the pool). Both masks are computed; the difference does not move any comparison.",
+  "The shadow applies each rule without the decoupled weight-decay write, so its 0.2452 SGD deficit is a decay-free SGD rule's. That omission is negligible at AdamW's learning rate (0.00051 lattice spacings) but not at SGD's (up to 0.1487), which is why the shadow reads 0.05431 to 0.1186 below the real SGD runs. The real runs, which carry the decay, put SGD 0.1544 below AdamW at matched magnitude, so the direction and rough size of the effect survive either way.",
+  "The 4/3 value is the small-update limit for a broadly spread distribution of intended updates, which AdamW and Muon have and SGD does not. Decay-free SGD's shadow curve reaches only 1.2368 at the smallest magnitude swept."
+ ],
+ "artifacts": [
+  "experiments/experiment-2-xk0pk0/results/by_condition.json",
+  "experiments/experiment-2-xk0pk0/results/by_condition.csv",
+  "experiments/experiment-2-xk0pk0/results/shadow_curve.json",
+  "experiments/experiment-2-xk0pk0/results/step_histograms.json",
+  "experiments/experiment-2-xk0pk0/results/mechanism.json",
+  "experiments/experiment-2-xk0pk0/results/data_pipeline.json",
+  "experiments/experiment-2-xk0pk0/figures/",
+  "artifact://juiceb0xc0de-15787e/experiments/exp_01m1rc45nwevdtjx8af5xk0pk0/"
+ ]
+}
